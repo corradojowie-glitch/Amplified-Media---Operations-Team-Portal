@@ -115,21 +115,31 @@
             <span>Archived</span>
             <span id="navArchiveCount" class="px-1.5 py-0.2 text-[11px] rounded-full bg-[#F73C5C]/20 text-[#F73C5C]">0</span>
           </button>
+          <button data-tab="history" onclick="switchTab('history')" class="nav-btn flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition-all">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            <span>Activity History</span>
+            <span id="navHistoryCount" class="px-1.5 py-0.2 text-[11px] rounded-full bg-[#2A8BEA]/20 text-[#2A8BEA]">0</span>
+          </button>
         </nav>
 
-        <!-- Right Quick Controls -->
-        <div class="flex items-center gap-2">
-          <div class="hidden 2xl:flex items-center gap-2 text-xs bg-[#161618] px-3 py-1.5 rounded-lg border border-[#262629]">
-            <span class="font-bold text-white">Jowie Corrado</span>
-            <span class="text-zinc-500">•</span>
-            <span class="text-[#FF9D00] font-semibold">Business Owner</span>
-          </div>
-          <div class="hidden xl:flex items-center gap-1.5 text-xs text-zinc-400 bg-[#161618] px-3 py-1.5 rounded-lg border border-[#262629]">
-            <span class="w-2 h-2 rounded-full bg-[#48CAED] animate-pulse"></span>
-            <span>Auto-Saved</span>
-          </div>
-          <button onclick="openResetConfirm()" class="px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-400 hover:text-white bg-[#161618] hover:bg-[#1E1E22] border border-[#262629] transition">
-            Reset Demo Data
+        <!-- Right Quick Controls: Active Team Member + Firebase Cloud Sync -->
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- Active Operator Selector Pill -->
+          <button onclick="openOperatorModal()" id="activeOperatorBtn" class="flex items-center gap-2 text-xs bg-[#161618] hover:bg-[#1E1E22] px-3 py-1.5 rounded-lg border border-[#FF9D00]/45 transition">
+            <span class="w-2 h-2 rounded-full bg-[#FF9D00]"></span>
+            <span class="text-zinc-400 hidden sm:inline">Operator:</span>
+            <span id="activeOperatorLabel" class="font-bold text-[#FF9D00]">Select Team Member</span>
+            <span class="text-[10px] text-zinc-400 underline ml-0.5">Switch</span>
+          </button>
+
+          <!-- Firebase Live Cloud Sync Status Pill -->
+          <button onclick="openFirebaseModal()" id="firebaseStatusBtn" class="flex items-center gap-1.5 text-xs bg-[#161618] hover:bg-[#1E1E22] px-3 py-1.5 rounded-lg border border-[#FF9D00]/40 text-[#FF9D00] font-semibold transition">
+            <span id="firebaseStatusDot" class="w-2 h-2 rounded-full bg-[#FF9D00] animate-pulse"></span>
+            <span id="firebaseStatusText">Local Mode — Connect Firebase</span>
+          </button>
+
+          <button onclick="openResetConfirm()" class="px-2.5 py-1.5 rounded-lg text-xs font-medium text-zinc-400 hover:text-white bg-[#161618] hover:bg-[#1E1E22] border border-[#262629] transition">
+            Reset Demo
           </button>
         </div>
       </div>
@@ -187,7 +197,7 @@
           </div>
           <div class="flex items-center gap-2">
             <button onclick="openRosterModal()" class="px-3 py-1.5 rounded-lg bg-[#1E1E22] hover:bg-[#27272C] text-xs font-semibold text-[#48CAED] border border-[#48CAED]/30 transition">
-              Manage / Rename Designers
+              Manage / Rename Team Roster
             </button>
             <button onclick="switchTab('designers')" class="px-3 py-1.5 rounded-lg bg-[#1E1E22] hover:bg-[#27272C] text-xs font-semibold text-zinc-300 border border-[#262629] transition">
               Open Workspace →
@@ -237,7 +247,7 @@
           <button onclick="openBulkAddModal()" class="px-3.5 py-2.5 rounded-xl bg-[#1E1E22] hover:bg-[#27272D] text-zinc-200 border border-[#262629] text-xs font-semibold transition">
             + Bulk Add Rows
           </button>
-          <button onclick="addNewLeadRow()" class="px-4 py-2.5 rounded-xl bg-[#FF9D00] hover:bg-[#ffb033] text-[#0D0D0D] text-xs sm:text-sm font-bold shadow-lg shadow-[#FF9D00]/20 flex items-center gap-1.5 transition">
+          <button onclick="requireOperator(() => addNewLeadRow())" class="px-4 py-2.5 rounded-xl bg-[#FF9D00] hover:bg-[#ffb033] text-[#0D0D0D] text-xs sm:text-sm font-bold shadow-lg shadow-[#FF9D00]/20 flex items-center gap-1.5 transition">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
             <span>Add New Lead Row</span>
           </button>
@@ -325,6 +335,7 @@
                 <th class="py-3.5 px-3.5 min-w-[165px]">7. Website</th>
                 <th class="py-3.5 px-3.5 min-w-[175px]">8. Engagement Status</th>
                 <th class="py-3.5 px-3.5 min-w-[165px]">9. CSM Comments</th>
+                <th class="py-3.5 px-3.5 min-w-[145px]">10. Attribution</th>
                 <th class="py-3.5 px-3.5 text-right min-w-[165px]">Actions</th>
               </tr>
             </thead>
@@ -406,35 +417,37 @@
       <div class="bg-[#161618] border border-[#262629] rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 class="font-display text-xl sm:text-2xl font-extrabold text-white flex items-center gap-2.5">
-            <span>Archived Records Vault</span>
-            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#F73C5C]/15 text-[#F73C5C] border border-[#F73C5C]/30">Storage</span>
+            <span>Archived Items Vault</span>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#F73C5C]/15 text-[#F73C5C] border border-[#F73C5C]/30">Cold Storage</span>
           </h1>
           <p class="text-xs sm:text-sm text-zinc-400 mt-1">
-            All archived CSM Leads and Funnel Designer builds are stored safely here. Restore items back to active boards anytime or permanently remove them.
+            Review archived CSM prospects and completed/paused funnel builds. Restore any record back to active pipelines or permanently delete it.
           </p>
         </div>
-        <div class="flex items-center gap-2 bg-[#0D0D0D] p-1 rounded-xl border border-[#262629]">
-          <button id="archSubTabLeads" onclick="switchArchiveSubTab('leads')" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition">
+
+        <!-- Archive Sub-Navigation Tabs -->
+        <div class="flex items-center gap-1.5 bg-[#0D0D0D] p-1 rounded-xl border border-[#262629]">
+          <button id="archSubTabLeads" onclick="switchArchiveSubTab('leads')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[#FF9D00] text-[#0D0D0D]">
             Archived Leads (<span id="archLeadsCount">0</span>)
           </button>
-          <button id="archSubTabProjects" onclick="switchArchiveSubTab('projects')" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition">
+          <button id="archSubTabProjects" onclick="switchArchiveSubTab('projects')" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-zinc-400 hover:text-white">
             Archived Funnel Builds (<span id="archProjectsCount">0</span>)
           </button>
         </div>
       </div>
 
-      <!-- Archived Leads View -->
+      <!-- Archived CSM Leads Panel -->
       <div id="archivedLeadsPanel" class="bg-[#161618] border border-[#262629] rounded-2xl overflow-hidden">
         <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse min-w-[1050px]">
             <thead>
               <tr class="bg-[#121214] border-b border-[#262629] text-[11px] font-bold uppercase tracking-wider text-zinc-400">
                 <th class="py-3.5 px-4">Company Name</th>
-                <th class="py-3.5 px-4">Representative &amp; Position</th>
-                <th class="py-3.5 px-4">Contact (Email / Phone)</th>
+                <th class="py-3.5 px-4">Representative</th>
+                <th class="py-3.5 px-4">Contact</th>
                 <th class="py-3.5 px-4">Site Address</th>
                 <th class="py-3.5 px-4">Last Status</th>
-                <th class="py-3.5 px-4">Archived Date</th>
+                <th class="py-3.5 px-4">Archived Info</th>
                 <th class="py-3.5 px-4 text-right">Actions</th>
               </tr>
             </thead>
@@ -442,14 +455,52 @@
           </table>
         </div>
         <div id="archivedLeadsEmpty" class="hidden py-12 text-center text-zinc-500 text-sm">
-          No archived CSM leads found.
+          No archived CSM leads in storage.
         </div>
       </div>
 
-      <!-- Archived Projects View -->
-      <div id="archivedProjectsPanel" class="hidden grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+      <!-- Archived Funnel Builds Panel -->
+      <div id="archivedProjectsPanel" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
       <div id="archivedProjectsEmpty" class="hidden bg-[#161618] border border-[#262629] rounded-2xl py-12 text-center text-zinc-500 text-sm">
-        No archived funnel builds found.
+        No archived funnel builds in storage.
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 5: LIVE ACTIVITY & AUDIT HISTORY LOG                            -->
+    <!-- =================================================================== -->
+    <section id="view-history" class="hidden animate-view space-y-5">
+      <div class="bg-[#161618] border border-[#262629] rounded-2xl p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div>
+          <h1 class="font-display text-xl sm:text-2xl font-extrabold text-white flex items-center gap-2.5">
+            <span>Live Team Activity &amp; Audit History</span>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#2A8BEA]/15 text-[#2A8BEA] border border-[#2A8BEA]/30">Accountability Log</span>
+          </h1>
+          <p class="text-xs sm:text-sm text-zinc-400 mt-1">
+            Every creation, status update, task completion, comment, archive, restore, and deletion is permanently attributed to the selected team member.
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <select id="historyActorFilter" onchange="renderHistoryView()" class="bg-[#0D0D0D] border border-[#262629] focus:border-[#48CAED] rounded-xl px-3 py-2 text-xs text-white outline-none">
+            <option value="ALL">All Team Members</option>
+          </select>
+          <select id="historyCategoryFilter" onchange="renderHistoryView()" class="bg-[#0D0D0D] border border-[#262629] focus:border-[#FF9D00] rounded-xl px-3 py-2 text-xs text-white outline-none">
+            <option value="ALL">All Action Types</option>
+            <option value="LEAD">CSM Leads</option>
+            <option value="FUNNEL">Funnel Projects &amp; Tasks</option>
+            <option value="COMMENT">Comments &amp; Notes</option>
+            <option value="ARCHIVE">Archive / Restore / Delete</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="bg-[#161618] border border-[#262629] rounded-2xl overflow-hidden">
+        <div id="historyFeedList" class="divide-y divide-[#262629]/80">
+          <!-- Populated dynamically -->
+        </div>
+        <div id="historyEmptyState" class="hidden py-12 text-center text-zinc-500 text-sm">
+          No activity history recorded yet. Any action performed by a team member will appear here live.
+        </div>
       </div>
     </section>
 
@@ -538,20 +589,25 @@
   <!-- MODAL 2: MANAGE / RENAME FUNNEL DESIGNERS ROSTER                    -->
   <!-- =================================================================== -->
   <div id="rosterModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 backdrop-blur-sm p-4">
-    <div class="bg-[#161618] border border-[#262629] rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+    <div class="bg-[#161618] border border-[#262629] rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-[#262629] pb-3">
         <div>
-          <h3 class="font-display text-lg font-bold text-white">Funnel Designers Roster</h3>
-          <p class="text-xs text-zinc-400">Rename FD1–FD6 to team member names or add new Funnel Designers.</p>
+          <h3 class="font-display text-lg font-bold text-white">Team Roster (Designers, CSMs &amp; Leadership)</h3>
+          <p class="text-xs text-zinc-400">Rename FD1–FD6, CSMs, or add new team members for activity attribution &amp; task assignment.</p>
         </div>
         <button onclick="closeModal('rosterModal')" class="text-zinc-400 hover:text-white p-1">✕</button>
       </div>
 
-      <!-- Add New Designer Form -->
-      <form onsubmit="addNewDesigner(event)" class="flex gap-2">
-        <input id="newDesignerNameInput" type="text" required placeholder="New designer name (e.g. FD7 or Maya Lin)" class="flex-1 bg-[#0D0D0D] border border-[#262629] focus:border-[#48CAED] rounded-xl px-3 py-2 text-xs sm:text-sm text-white outline-none" />
+      <!-- Add New Team Member Form -->
+      <form onsubmit="addNewDesigner(event)" class="flex flex-col sm:flex-row gap-2">
+        <input id="newDesignerNameInput" type="text" required placeholder="Name (e.g. FD7, CSM 3, Maya Lin)" class="flex-1 bg-[#0D0D0D] border border-[#262629] focus:border-[#48CAED] rounded-xl px-3 py-2 text-xs sm:text-sm text-white outline-none" />
+        <select id="newMemberTypeSelect" class="bg-[#0D0D0D] border border-[#262629] focus:border-[#FF9D00] rounded-xl px-3 py-2 text-xs text-white outline-none">
+          <option value="designer">Funnel Designer</option>
+          <option value="csm">Client Success Manager (CSM)</option>
+          <option value="admin">Owner / Operations Admin</option>
+        </select>
         <button type="submit" class="px-4 py-2 rounded-xl bg-[#48CAED] hover:bg-[#66d4f2] text-[#0D0D0D] text-xs font-bold whitespace-nowrap">
-          + Add Designer
+          + Add Member
         </button>
       </form>
 
@@ -560,7 +616,10 @@
         <!-- Populated dynamically -->
       </div>
 
-      <div class="flex justify-end pt-2 border-t border-[#262629]">
+      <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#262629]">
+        <button onclick="openOperatorModal()" class="text-xs font-semibold text-[#FF9D00] hover:underline">
+          Switch Active Team Member
+        </button>
         <button onclick="closeModal('rosterModal')" class="px-4 py-2 rounded-xl bg-[#FF9D00] text-[#0D0D0D] text-xs font-bold">Done</button>
       </div>
     </div>
@@ -642,10 +701,11 @@
 
       <!-- Add Comment Form -->
       <form onsubmit="submitComment(event)" class="pt-3.5 border-t border-[#262629] space-y-2.5">
+        <div class="flex items-center justify-between text-[11px] text-zinc-400">
+          <span>Posting as: <strong id="commentActiveOperatorTag" class="text-[#FF9D00]">Select Team Member</strong></span>
+          <button type="button" onclick="openOperatorModal()" class="text-[#48CAED] hover:underline">Change Operator</button>
+        </div>
         <div class="flex flex-col sm:flex-row gap-2">
-          <select id="commentAuthorSelect" class="sm:w-44 bg-[#0D0D0D] border border-[#262629] focus:border-[#48CAED] rounded-xl px-3 py-2 text-xs font-semibold text-white outline-none">
-            <!-- Populated with CSM, Jowie Corrado, and FD1-FD6+ -->
-          </select>
           <input id="commentTextInput" type="text" required placeholder="Write an update, blocker, Loom link, or call note..." class="flex-1 bg-[#0D0D0D] border border-[#262629] focus:border-[#FF9D00] rounded-xl px-3 py-2 text-xs sm:text-sm text-white placeholder-zinc-500 outline-none" />
           <button type="submit" class="px-4 py-2 rounded-xl bg-[#FF9D00] hover:bg-[#ffb033] text-[#0D0D0D] text-xs font-bold whitespace-nowrap shadow-lg shadow-[#FF9D00]/15 transition">
             Post Note
@@ -655,10 +715,123 @@
     </div>
   </div>
 
+  <!-- =================================================================== -->
+  <!-- MODAL 6: MANDATORY TEAM MEMBER IDENTITY SELECTOR GATE               -->
+  <!-- =================================================================== -->
+  <div id="operatorModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85 backdrop-blur-md p-4">
+    <div class="bg-[#161618] border border-[#FF9D00]/45 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-start justify-between gap-3 border-b border-[#262629] pb-3.5">
+        <div>
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-[#FF9D00]/15 text-[#FF9D00] border border-[#FF9D00]/35 mb-1.5">
+            Team Accountability Gate
+          </span>
+          <h3 class="font-display text-lg font-extrabold text-white">Who is updating the portal right now?</h3>
+          <p class="text-xs text-zinc-400 mt-0.5">Select your team member profile. Every edit, comment, task check, archive, or deletion will be stamped with your name.</p>
+        </div>
+        <button onclick="cancelOperatorModal()" class="text-zinc-400 hover:text-white p-1">✕</button>
+      </div>
+
+      <div id="operatorGridList" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-72 overflow-y-auto pr-1">
+        <!-- Populated dynamically from Team Roster -->
+      </div>
+
+      <div class="pt-3 border-t border-[#262629] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+        <span class="text-zinc-400">Don't see your name?</span>
+        <button type="button" onclick="closeModal('operatorModal'); openRosterModal();" class="text-[#48CAED] font-semibold hover:underline">
+          + Add / Rename Team Member in Roster
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================================================================== -->
+  <!-- MODAL 7: FIREBASE LIVE CLOUD SYNC SETUP (GITHUB PAGES / GOOGLE SITE)-->
+  <!-- =================================================================== -->
+  <div id="firebaseModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85 backdrop-blur-md p-4">
+    <div class="bg-[#161618] border border-[#48CAED]/45 rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+      <div class="flex items-start justify-between gap-3 border-b border-[#262629] pb-3.5">
+        <div>
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-[#48CAED]/15 text-[#48CAED] border border-[#48CAED]/35 mb-1.5">
+            Real-Time Multi-User Cloud Sync
+          </span>
+          <h3 class="font-display text-lg font-extrabold text-white">Connect Firebase Realtime / Firestore Database</h3>
+          <p class="text-xs text-zinc-400 mt-0.5">Syncs all leads, funnel tasks, comments, and history live across every team member on GitHub Pages &amp; Google Sites.</p>
+        </div>
+        <button onclick="closeModal('firebaseModal')" class="text-zinc-400 hover:text-white p-1">✕</button>
+      </div>
+
+      <div id="firebaseConnectionBanner" class="p-3.5 rounded-xl bg-[#0D0D0D] border border-[#262629] flex items-center justify-between gap-3">
+        <div class="text-xs">
+          <p class="font-bold text-white" id="fbModalStatusTitle">Status: Local Browser Mode</p>
+          <p class="text-zinc-400 mt-0.5" id="fbModalStatusDesc">Paste your Firebase Web App config below to enable instant live syncing across your agency.</p>
+        </div>
+        <button id="fbDisconnectBtn" onclick="disconnectFirebase()" class="hidden px-3 py-1.5 rounded-lg bg-[#F73C5C]/15 text-[#F73C5C] border border-[#F73C5C]/35 text-xs font-bold shrink-0">
+          Disconnect
+        </button>
+      </div>
+
+      <div class="space-y-2">
+        <label class="block text-xs font-semibold text-zinc-200">Paste Firebase Config Object or JSON (from Firebase Console → Project Settings → Web App)</label>
+        <textarea id="firebaseConfigInput" rows="6" placeholder='{
+  "apiKey": "AIzaSy...",
+  "authDomain": "amplified-media-ops.firebaseapp.com",
+  "projectId": "amplified-media-ops",
+  "storageBucket": "amplified-media-ops.appspot.com",
+  "messagingSenderId": "1234567890",
+  "appId": "1:1234567890:web:abcdef123456"
+}' class="w-full font-mono bg-[#0D0D0D] border border-[#262629] focus:border-[#48CAED] rounded-xl p-3 text-xs text-[#48CAED] placeholder-zinc-600 outline-none"></textarea>
+        <p class="text-[11px] text-zinc-400">
+          Tip: In Firebase Console, enable <strong class="text-zinc-200">Cloud Firestore</strong> (in test mode or authenticated rules) and <strong class="text-zinc-200">Anonymous Authentication</strong> (or open Firestore rules for <code class="text-[#FF9D00]">amplified_media_portal/live_state</code>).
+        </p>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-[#262629]">
+        <button type="button" onclick="copyHardcodedConfigSnippet()" class="px-3.5 py-2 rounded-xl bg-[#1E1E22] hover:bg-[#27272D] text-xs font-semibold text-[#48CAED] border border-[#48CAED]/35 transition">
+          Copy Hardcoded Snippet for GitHub Pages
+        </button>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="closeModal('firebaseModal')" class="px-4 py-2 rounded-xl bg-[#1E1E22] text-zinc-300 text-xs font-semibold">Close</button>
+          <button type="button" onclick="saveAndConnectFirebase()" class="px-5 py-2 rounded-xl bg-[#FF9D00] hover:bg-[#ffb033] text-[#0D0D0D] text-xs font-bold shadow-lg shadow-[#FF9D00]/20">
+            Save &amp; Connect Live Sync
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification Banner -->
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
+  <script type="module">
+    import { initializeApp, getApps, deleteApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    window.FirebaseSDK = {
+      initializeApp,
+      getApps,
+      deleteApp,
+      getAuth,
+      signInAnonymously,
+      signInWithCustomToken,
+      getFirestore,
+      doc,
+      setDoc,
+      onSnapshot
+    };
+
+    if (typeof window.initFirebaseSync === 'function') {
+      window.initFirebaseSync();
+    }
+  </script>
+
   <script>
+    // =========================================================================
+    // OPTIONAL: HARDCODE YOUR FIREBASE CONFIG HERE FOR GITHUB PAGES HOSTING
+    // Once pasted here and pushed to GitHub, every team member connects live!
+    // =========================================================================
+    const HARDCODED_FIREBASE_CONFIG = null;
+
     // =========================================================================
     // 1. CONSTANTS, ALL 50 US STATES & AMPLIFIED MEDIA PACKAGE DEFINITIONS
     // =========================================================================
@@ -753,20 +926,25 @@
       'Closed - Lost'
     ];
 
-    const STORAGE_KEY = 'amplified_media_ops_portal_v1';
+    const STORAGE_KEY = 'amplified_media_ops_portal_v2';
+    const FB_CONFIG_STORAGE_KEY = 'amplified_media_firebase_cfg_v1';
+    const OPERATOR_SESSION_KEY = 'amplified_media_active_operator_v1';
 
     // =========================================================================
-    // 2. INITIAL DEMO DATA & STATE MANAGEMENT
+    // 2. INITIAL DEMO DATA & STATE MANAGEMENT + FIREBASE REALTIME SYNC
     // =========================================================================
     function getDefaultState() {
       return {
         designers: [
-          { id: 'fd-1', name: 'FD1', role: 'Lead Funnel Architect' },
-          { id: 'fd-2', name: 'FD2', role: 'Conversion Designer' },
-          { id: 'fd-3', name: 'FD3', role: 'Automation & CRM Specialist' },
-          { id: 'fd-4', name: 'FD4', role: 'Landing Page Designer' },
-          { id: 'fd-5', name: 'FD5', role: 'CRO & Split-Test Specialist' },
-          { id: 'fd-6', name: 'FD6', role: 'Funnel Builder' }
+          { id: 'owner-1', name: 'Jowie Corrado', role: 'Business Owner', memberType: 'admin' },
+          { id: 'csm-1', name: 'CSM 1', role: 'Client Success Manager', memberType: 'csm' },
+          { id: 'csm-2', name: 'CSM 2', role: 'Client Success Manager', memberType: 'csm' },
+          { id: 'fd-1', name: 'FD1', role: 'Lead Funnel Architect', memberType: 'designer' },
+          { id: 'fd-2', name: 'FD2', role: 'Conversion Designer', memberType: 'designer' },
+          { id: 'fd-3', name: 'FD3', role: 'Automation & CRM Specialist', memberType: 'designer' },
+          { id: 'fd-4', name: 'FD4', role: 'Landing Page Designer', memberType: 'designer' },
+          { id: 'fd-5', name: 'FD5', role: 'CRO & Split-Test Specialist', memberType: 'designer' },
+          { id: 'fd-6', name: 'FD6', role: 'Funnel Builder', memberType: 'designer' }
         ],
         leads: [
           {
@@ -779,9 +957,11 @@
             address: '412 Congress Ave, Austin, TX',
             website: 'https://lonestarsolar.com',
             status: 'Closed - Won',
+            updatedBy: 'Jowie Corrado',
+            updatedAt: 'Nov 12, 2026 • 4:05 PM',
             comments: [
-              { id: 'c-101', author: 'CSM', text: 'Discovery call completed with Marcus. Ready for Tier 3 build + paid traffic scaling.', timestamp: 'Nov 12, 2026 • 2:15 PM' },
-              { id: 'c-102', author: 'Jowie Corrado', text: 'Approved handoff—prioritize fast DNS & Meta Pixel setup.', timestamp: 'Nov 12, 2026 • 4:05 PM' }
+              { id: 'c-101', author: 'CSM 1', role: 'Client Success Manager', text: 'Discovery call completed with Marcus. Ready for Tier 3 build + paid traffic scaling.', timestamp: 'Nov 12, 2026 • 2:15 PM' },
+              { id: 'c-102', author: 'Jowie Corrado', role: 'Business Owner', text: 'Approved handoff—prioritize fast DNS & Meta Pixel setup.', timestamp: 'Nov 12, 2026 • 4:05 PM' }
             ]
           },
           {
@@ -794,8 +974,10 @@
             address: '9401 Wilshire Blvd, Beverly Hills, CA',
             website: 'https://pacificcrestaesthetics.com',
             status: 'Under Engagement',
+            updatedBy: 'CSM 1',
+            updatedAt: 'Nov 15, 2026 • 11:20 AM',
             comments: [
-              { id: 'c-103', author: 'CSM', text: 'Sent Loom audit of current Botox opt-in flow; follow-up call booked for Thursday.', timestamp: 'Nov 15, 2026 • 11:20 AM' }
+              { id: 'c-103', author: 'CSM 1', role: 'Client Success Manager', text: 'Sent Loom audit of current Botox opt-in flow; follow-up call booked for Thursday.', timestamp: 'Nov 15, 2026 • 11:20 AM' }
             ]
           },
           {
@@ -808,6 +990,8 @@
             address: '1101 Brickell Ave, Miami, FL',
             website: 'https://brickellwealth.io',
             status: 'Called',
+            updatedBy: 'CSM 2',
+            updatedAt: 'Nov 15, 2026 • 3:10 PM',
             comments: []
           },
           {
@@ -820,6 +1004,8 @@
             address: '350 Fifth Ave, New York, NY',
             website: 'https://empireortho.com',
             status: 'Emailed',
+            updatedBy: 'CSM 2',
+            updatedAt: 'Nov 16, 2026 • 9:15 AM',
             comments: []
           },
           {
@@ -832,6 +1018,8 @@
             address: '1700 Lincoln St, Denver, CO',
             website: 'https://frontrangebuilders.co',
             status: 'Under Campaign',
+            updatedBy: 'CSM 1',
+            updatedAt: 'Nov 16, 2026 • 10:00 AM',
             comments: []
           },
           {
@@ -844,8 +1032,10 @@
             address: '3344 Peachtree Rd NE, Atlanta, GA',
             website: 'https://peachtreedental.com',
             status: 'Closed - Won',
+            updatedBy: 'CSM 1',
+            updatedAt: 'Nov 14, 2026 • 1:40 PM',
             comments: [
-              { id: 'c-106', author: 'CSM', text: 'Closed Tier 2 system. Client prefers clean white & gold clinic branding.', timestamp: 'Nov 14, 2026 • 1:40 PM' }
+              { id: 'c-106', author: 'CSM 1', role: 'Client Success Manager', text: 'Closed Tier 2 system. Client prefers clean white & gold clinic branding.', timestamp: 'Nov 14, 2026 • 1:40 PM' }
             ]
           },
           {
@@ -858,6 +1048,8 @@
             address: '1201 Third Ave, Seattle, WA',
             website: 'https://emeraldcityfreight.com',
             status: 'Under Engagement',
+            updatedBy: 'CSM 2',
+            updatedAt: 'Nov 16, 2026 • 2:45 PM',
             comments: []
           }
         ],
@@ -870,22 +1062,25 @@
             tierId: 'tier3',
             hasAddon: true,
             createdAt: '2026-11-12',
+            updatedBy: 'FD1',
+            updatedAt: 'Nov 16, 2026 • 10:05 AM',
             checklist: [
               {
                 id: 't-1',
                 text: 'Tier 1 & 2 Full Build: Funnel pages, VSL, Calendar, 5-Email Nurture & CRM',
                 done: true,
+                completedBy: 'FD1',
                 comments: [
-                  { id: 'tc-1', author: 'FD1', text: 'Opt-in, VSL bridge, and Calendly embed live on staging.', timestamp: 'Nov 14, 2026 • 3:10 PM' }
+                  { id: 'tc-1', author: 'FD1', role: 'Lead Funnel Architect', text: 'Opt-in, VSL bridge, and Calendly embed live on staging.', timestamp: 'Nov 14, 2026 • 3:10 PM' }
                 ]
               },
-              { id: 't-2', text: 'Secondary A/B split-test landing page variant (headline/hook/hero)', done: true, comments: [] },
+              { id: 't-2', text: 'Secondary A/B split-test landing page variant (headline/hook/hero)', done: true, completedBy: 'FD1', comments: [] },
               {
                 id: 't-3',
                 text: 'Custom domain DNS/CNAME/SSL + Meta Pixel & GA4 conversion events (Lead, Schedule)',
                 done: false,
                 comments: [
-                  { id: 'tc-2', author: 'FD1', text: 'Waiting on Cloudflare CNAME propagation from client IT team.', timestamp: 'Nov 16, 2026 • 10:05 AM' }
+                  { id: 'tc-2', author: 'FD1', role: 'Lead Funnel Architect', text: 'Waiting on Cloudflare CNAME propagation from client IT team.', timestamp: 'Nov 16, 2026 • 10:05 AM' }
                 ]
               },
               { id: 't-4', text: 'Pre-launch CRO audit, page-speed & mobile thumb-zone check + post-launch Loom', done: false, comments: [] },
@@ -900,12 +1095,14 @@
             tierId: 'tier2',
             hasAddon: false,
             createdAt: '2026-11-14',
+            updatedBy: 'FD2',
+            updatedAt: 'Nov 16, 2026 • 4:20 PM',
             checklist: [
-              { id: 't-21', text: 'Tier 1 Foundation: Opt-In Page, Thank-You Page, Tagging & Responsive QA', done: true, comments: [] },
-              { id: 't-22', text: 'Multi-step lead qualification form & VSL / bridge page build', done: true, comments: [] },
-              { id: 't-23', text: 'Embedded Calendly / native calendar booking flow integration', done: true, comments: [] },
-              { id: 't-24', text: '5-email automated nurture sequence & CRM pipeline stage triggers', done: true, comments: [] },
-              { id: 't-25', text: 'Custom subdomain/domain connection & end-to-end booking test', done: true, comments: [] }
+              { id: 't-21', text: 'Tier 1 Foundation: Opt-In Page, Thank-You Page, Tagging & Responsive QA', done: true, completedBy: 'FD2', comments: [] },
+              { id: 't-22', text: 'Multi-step lead qualification form & VSL / bridge page build', done: true, completedBy: 'FD2', comments: [] },
+              { id: 't-23', text: 'Embedded Calendly / native calendar booking flow integration', done: true, completedBy: 'FD2', comments: [] },
+              { id: 't-24', text: '5-email automated nurture sequence & CRM pipeline stage triggers', done: true, completedBy: 'FD2', comments: [] },
+              { id: 't-25', text: 'Custom subdomain/domain connection & end-to-end booking test', done: true, completedBy: 'FD2', comments: [] }
             ]
           },
           {
@@ -916,8 +1113,10 @@
             tierId: 'tier1',
             hasAddon: false,
             createdAt: '2026-11-15',
+            updatedBy: 'FD3',
+            updatedAt: 'Nov 16, 2026 • 1:15 PM',
             checklist: [
-              { id: 't-31', text: 'Custom Lead Capture / Opt-In Page design & build', done: true, comments: [] },
+              { id: 't-31', text: 'Custom Lead Capture / Opt-In Page design & build', done: true, completedBy: 'FD3', comments: [] },
               { id: 't-32', text: 'Thank-You / Resource Delivery Page setup', done: false, comments: [] },
               { id: 't-33', text: 'Opt-in form, automated lead magnet trigger & CRM contact tagging', done: false, comments: [] },
               { id: 't-34', text: 'Custom brand colors/typography, desktop/mobile responsive & OpenGraph QA', done: false, comments: [] }
@@ -931,6 +1130,8 @@
             tierId: 'tier2',
             hasAddon: true,
             createdAt: '2026-11-16',
+            updatedBy: 'Jowie Corrado',
+            updatedAt: 'Nov 16, 2026 • 5:00 PM',
             checklist: [
               { id: 't-41', text: 'Tier 1 Foundation: Opt-In Page, Thank-You Page, Tagging & Responsive QA', done: false, comments: [] },
               { id: 't-42', text: 'Multi-step lead qualification form & VSL / bridge page build', done: false, comments: [] },
@@ -952,13 +1153,46 @@
             address: '200 Clarendon St, Boston, MA',
             website: 'https://oldharborins.com',
             status: 'Closed - Lost',
+            archivedBy: 'CSM 1',
             comments: [
-              { id: 'c-099', author: 'CSM', text: 'Paused Q4 budget; revisit in Q1.', timestamp: 'Nov 08, 2026 • 9:45 AM' }
+              { id: 'c-099', author: 'CSM 1', role: 'Client Success Manager', text: 'Paused Q4 budget; revisit in Q1.', timestamp: 'Nov 08, 2026 • 9:45 AM' }
             ],
             archivedAt: '2026-11-08'
           }
         ],
-        archivedProjects: []
+        archivedProjects: [],
+        historyLog: [
+          {
+            id: 'hist-1',
+            timestamp: 'Nov 16, 2026 • 5:00 PM',
+            actorName: 'Jowie Corrado',
+            actorRole: 'Business Owner',
+            category: 'FUNNEL',
+            action: 'Assigned Tier 2 + Maintenance',
+            target: 'Desert Sky MedSpa (AZ)',
+            details: 'Assigned build checklist to FD4.'
+          },
+          {
+            id: 'hist-2',
+            timestamp: 'Nov 16, 2026 • 10:05 AM',
+            actorName: 'FD1',
+            actorRole: 'Lead Funnel Architect',
+            category: 'COMMENT',
+            action: 'Commented on Task',
+            target: 'Lone Star Solar & Roofing',
+            details: 'Waiting on Cloudflare CNAME propagation from client IT team.'
+          },
+          {
+            id: 'hist-3',
+            timestamp: 'Nov 12, 2026 • 4:05 PM',
+            actorName: 'Jowie Corrado',
+            actorRole: 'Business Owner',
+            category: 'LEAD',
+            action: 'Approved Handoff',
+            target: 'Lone Star Solar & Roofing',
+            details: 'Status marked Closed - Won and handed off to Funnel Designers.'
+          }
+        ]
       };
     }
 
@@ -968,22 +1202,51 @@
     let activeArchiveSubTab = 'leads';
     let activeCommentContext = null; // { type: 'lead' | 'task', leadId?, projectId?, taskId? }
 
+    // Team Member Identity Session & Pending Action Callback
+    let activeOperator = loadSessionOperator(); // { id, name, role } or null
+    let pendingOperatorAction = null;
+
+    // Firebase Sync Handles
+    let firebaseConnected = false;
+    let firestoreDocRef = null;
+    let unsubscribeSnapshot = null;
+    let isApplyingRemoteSnapshot = false;
+
+    function normalizeStateShape(raw) {
+      const def = getDefaultState();
+      if (!raw || typeof raw !== 'object') return def;
+      const merged = {
+        designers: Array.isArray(raw.designers) && raw.designers.length ? raw.designers : def.designers,
+        leads: Array.isArray(raw.leads) ? raw.leads : def.leads,
+        projects: Array.isArray(raw.projects) ? raw.projects : def.projects,
+        archivedLeads: Array.isArray(raw.archivedLeads) ? raw.archivedLeads : [],
+        archivedProjects: Array.isArray(raw.archivedProjects) ? raw.archivedProjects : [],
+        historyLog: Array.isArray(raw.historyLog) ? raw.historyLog : def.historyLog
+      };
+      merged.designers.forEach(d => {
+        if (!d.memberType) {
+          const r = (d.role || '').toLowerCase();
+          if (r.includes('owner') || r.includes('admin')) d.memberType = 'admin';
+          else if (r.includes('csm') || r.includes('success')) d.memberType = 'csm';
+          else d.memberType = 'designer';
+        }
+      });
+      merged.leads.forEach(l => { if (!Array.isArray(l.comments)) l.comments = []; });
+      merged.archivedLeads.forEach(l => { if (!Array.isArray(l.comments)) l.comments = []; });
+      merged.projects.forEach(p => {
+        (p.checklist || []).forEach(t => { if (!Array.isArray(t.comments)) t.comments = []; });
+      });
+      merged.archivedProjects.forEach(p => {
+        (p.checklist || []).forEach(t => { if (!Array.isArray(t.comments)) t.comments = []; });
+      });
+      return merged;
+    }
+
     function loadState() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (!raw) return getDefaultState();
-        const parsed = JSON.parse(raw);
-        if (!parsed.designers || !parsed.leads || !parsed.projects) return getDefaultState();
-        // Ensure backward-compatible comments arrays exist on all records
-        parsed.leads.forEach(l => { if (!Array.isArray(l.comments)) l.comments = []; });
-        (parsed.archivedLeads || []).forEach(l => { if (!Array.isArray(l.comments)) l.comments = []; });
-        parsed.projects.forEach(p => {
-          (p.checklist || []).forEach(t => { if (!Array.isArray(t.comments)) t.comments = []; });
-        });
-        (parsed.archivedProjects || []).forEach(p => {
-          (p.checklist || []).forEach(t => { if (!Array.isArray(t.comments)) t.comments = []; });
-        });
-        return parsed;
+        return normalizeStateShape(JSON.parse(raw));
       } catch (e) {
         return getDefaultState();
       }
@@ -993,9 +1256,325 @@
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
       } catch (e) {
-        console.error('Storage save failed', e);
+        console.error('Local storage save failed', e);
       }
       updateNavBadges();
+
+      // Push live update to Firebase Firestore if connected and not echoing remote snapshot
+      if (firebaseConnected && firestoreDocRef && !isApplyingRemoteSnapshot && window.FirebaseSDK) {
+        const payload = JSON.parse(JSON.stringify(appState));
+        payload._lastSyncedAt = Date.now();
+        window.FirebaseSDK.setDoc(firestoreDocRef, payload).catch(err => {
+          console.error('Firebase live write failed:', err);
+          showToast('Cloud sync write warning — check Firestore rules');
+        });
+      }
+    }
+
+    function recordAuditLog(category, action, target, details = '') {
+      const actor = activeOperator || { name: 'Unidentified User', role: 'Team Member' };
+      if (!Array.isArray(appState.historyLog)) appState.historyLog = [];
+      appState.historyLog.unshift({
+        id: 'hist-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+        timestamp: formatNowTimestamp(),
+        actorName: actor.name,
+        actorRole: actor.role || 'Team Member',
+        category,
+        action,
+        target: target || 'Portal Item',
+        details
+      });
+      // Keep most recent 250 entries for fast syncing
+      if (appState.historyLog.length > 250) {
+        appState.historyLog = appState.historyLog.slice(0, 250);
+      }
+    }
+
+    // =========================================================================
+    // 2B. MANDATORY TEAM MEMBER IDENTITY GATE ("WHO IS UPDATING RIGHT NOW?")
+    // =========================================================================
+    function loadSessionOperator() {
+      try {
+        const raw = sessionStorage.getItem(OPERATOR_SESSION_KEY);
+        return raw ? JSON.parse(raw) : null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function saveSessionOperator(op) {
+      activeOperator = op;
+      try {
+        if (op) sessionStorage.setItem(OPERATOR_SESSION_KEY, JSON.stringify(op));
+        else sessionStorage.removeItem(OPERATOR_SESSION_KEY);
+      } catch (e) {}
+      updateOperatorHeaderUI();
+    }
+
+    function updateOperatorHeaderUI() {
+      const label = document.getElementById('activeOperatorLabel');
+      const btn = document.getElementById('activeOperatorBtn');
+      const cmtTag = document.getElementById('commentActiveOperatorTag');
+
+      if (activeOperator) {
+        label.textContent = `${activeOperator.name} (${activeOperator.role})`;
+        label.className = 'font-bold text-[#48CAED]';
+        btn.className = 'flex items-center gap-2 text-xs bg-[#161618] hover:bg-[#1E1E22] px-3 py-1.5 rounded-lg border border-[#48CAED]/45 transition';
+        if (cmtTag) cmtTag.textContent = `${activeOperator.name} • ${activeOperator.role}`;
+      } else {
+        label.textContent = 'Select Team Member';
+        label.className = 'font-bold text-[#FF9D00]';
+        btn.className = 'flex items-center gap-2 text-xs bg-[#161618] hover:bg-[#1E1E22] px-3 py-1.5 rounded-lg border border-[#FF9D00]/55 transition';
+        if (cmtTag) cmtTag.textContent = 'Not Selected (Will prompt on post)';
+      }
+    }
+
+    function requireOperator(callback) {
+      if (activeOperator && activeOperator.name) {
+        callback(activeOperator);
+        return;
+      }
+      pendingOperatorAction = callback;
+      openOperatorModal();
+    }
+
+    function openOperatorModal() {
+      const grid = document.getElementById('operatorGridList');
+      grid.innerHTML = appState.designers.map(member => {
+        const isCurrent = activeOperator && activeOperator.id === member.id;
+        let badgeColor = '#48CAED';
+        let typeLabel = 'Funnel Designer';
+        if (member.memberType === 'admin') { badgeColor = '#FF9D00'; typeLabel = 'Leadership / Admin'; }
+        if (member.memberType === 'csm') { badgeColor = '#2A8BEA'; typeLabel = 'CSM'; }
+
+        return `
+          <button type="button" onclick="selectOperator('${member.id}')" class="text-left p-3 rounded-xl border transition flex items-center justify-between gap-2 ${isCurrent ? 'bg-[#FF9D00]/15 border-[#FF9D00]' : 'bg-[#0D0D0D] hover:bg-[#1E1E22] border-[#262629] hover:border-[#48CAED]/50'}">
+            <div>
+              <div class="font-bold text-xs sm:text-sm text-white">${escapeHtml(member.name)}</div>
+              <div class="text-[11px] text-zinc-400">${escapeHtml(member.role || typeLabel)}</div>
+            </div>
+            <span class="px-2 py-0.5 rounded-md text-[10px] font-bold" style="background-color: ${badgeColor}20; color: ${badgeColor};">
+              ${isCurrent ? 'Active' : 'Select'}
+            </span>
+          </button>
+        `;
+      }).join('');
+      openModal('operatorModal');
+    }
+
+    function selectOperator(memberId) {
+      const member = appState.designers.find(d => d.id === memberId);
+      if (!member) return;
+      saveSessionOperator({
+        id: member.id,
+        name: member.name,
+        role: member.role || 'Team Member'
+      });
+      closeModal('operatorModal');
+      showToast(`Signed in as ${member.name}`);
+
+      if (typeof pendingOperatorAction === 'function') {
+        const fn = pendingOperatorAction;
+        pendingOperatorAction = null;
+        fn(activeOperator);
+      }
+    }
+
+    function cancelOperatorModal() {
+      pendingOperatorAction = null;
+      closeModal('operatorModal');
+    }
+
+    // =========================================================================
+    // 2C. FIREBASE LIVE CLOUD SYNC ENGINE (GITHUB PAGES & GOOGLE SITES READY)
+    // =========================================================================
+    function getEffectiveFirebaseConfig() {
+      if (HARDCODED_FIREBASE_CONFIG && HARDCODED_FIREBASE_CONFIG.projectId) {
+        return HARDCODED_FIREBASE_CONFIG;
+      }
+      if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+        try { return JSON.parse(__firebase_config); } catch (e) {}
+      }
+      try {
+        const saved = localStorage.getItem(FB_CONFIG_STORAGE_KEY);
+        if (saved) return JSON.parse(saved);
+      } catch (e) {}
+      return null;
+    }
+
+    function parseFlexibleFirebaseConfig(rawText) {
+      const trimmed = rawText.trim();
+      if (!trimmed) return null;
+      try {
+        return JSON.parse(trimmed);
+      } catch (e) {
+        // Allow pasting JS object literal from Firebase Console (e.g. const firebaseConfig = { apiKey: "..." };)
+        const start = trimmed.indexOf('{');
+        const end = trimmed.lastIndexOf('}');
+        if (start === -1 || end === -1) throw new Error('Invalid config object');
+        const objBody = trimmed.slice(start, end + 1);
+        const jsonified = objBody
+          .replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":')
+          .replace(/'/g, '"')
+          .replace(/,\s*}/g, '}');
+        return JSON.parse(jsonified);
+      }
+    }
+
+    async function initFirebaseSync() {
+      if (!window.FirebaseSDK) return;
+      const cfg = getEffectiveFirebaseConfig();
+      if (!cfg || !cfg.projectId) {
+        updateFirebaseStatusUI(false);
+        return;
+      }
+
+      try {
+        if (unsubscribeSnapshot) {
+          unsubscribeSnapshot();
+          unsubscribeSnapshot = null;
+        }
+        const existingApps = window.FirebaseSDK.getApps();
+        for (const app of existingApps) {
+          await window.FirebaseSDK.deleteApp(app);
+        }
+
+        const fbApp = window.FirebaseSDK.initializeApp(cfg);
+        const auth = window.FirebaseSDK.getAuth(fbApp);
+        const db = window.FirebaseSDK.getFirestore(fbApp);
+
+        // Attempt authentication gracefully; fall back cleanly if network/sandbox blocks Identity Toolkit
+        try {
+          if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+            await window.FirebaseSDK.signInWithCustomToken(auth, __initial_auth_token);
+          } else {
+            await window.FirebaseSDK.signInAnonymously(auth);
+          }
+        } catch (authErr) {
+          if (authErr && authErr.code === 'auth/network-request-failed') {
+            console.warn('Firebase Auth network unavailable in current environment; continuing in local-first mode.');
+            firebaseConnected = false;
+            updateFirebaseStatusUI(false);
+            return;
+          }
+          console.warn('Firebase Auth skipped:', authErr?.code || authErr);
+        }
+
+        const appNamespace = typeof __app_id !== 'undefined' ? __app_id : 'amplified-media-ops';
+        firestoreDocRef = window.FirebaseSDK.doc(db, 'artifacts', appNamespace, 'public', 'data', 'portal_state', 'master_board');
+
+        unsubscribeSnapshot = window.FirebaseSDK.onSnapshot(
+          firestoreDocRef,
+          (snap) => {
+            firebaseConnected = true;
+            updateFirebaseStatusUI(true, cfg.projectId);
+
+            if (snap.exists()) {
+              const remoteData = snap.data();
+              isApplyingRemoteSnapshot = true;
+              appState = normalizeStateShape(remoteData);
+              try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+              } catch (e) {}
+              updateNavBadges();
+              rerenderCurrentTab();
+              isApplyingRemoteSnapshot = false;
+            } else {
+              // First-time initialization: seed cloud Firestore with current state
+              saveState();
+            }
+          },
+          (err) => {
+            console.warn('Firestore listener paused (offline or rules restricted):', err?.code || err);
+            firebaseConnected = false;
+            updateFirebaseStatusUI(false);
+          }
+        );
+      } catch (err) {
+        console.warn('Firebase sync falling back to Local Mode:', err?.code || err);
+        firebaseConnected = false;
+        updateFirebaseStatusUI(false);
+      }
+    }
+    window.initFirebaseSync = initFirebaseSync;
+
+    function updateFirebaseStatusUI(connected, projectId = '') {
+      const btn = document.getElementById('firebaseStatusBtn');
+      const dot = document.getElementById('firebaseStatusDot');
+      const txt = document.getElementById('firebaseStatusText');
+      const title = document.getElementById('fbModalStatusTitle');
+      const desc = document.getElementById('fbModalStatusDesc');
+      const discBtn = document.getElementById('fbDisconnectBtn');
+
+      if (connected) {
+        btn.className = 'flex items-center gap-1.5 text-xs bg-[#161618] hover:bg-[#1E1E22] px-3 py-1.5 rounded-lg border border-[#48CAED]/45 text-[#48CAED] font-semibold transition';
+        dot.className = 'w-2 h-2 rounded-full bg-[#48CAED] animate-pulse';
+        txt.textContent = 'Live Cloud Sync';
+        if (title) title.textContent = `Connected Live to Firebase (${projectId})`;
+        if (desc) desc.textContent = 'Real-time syncing is active across all team browsers on GitHub Pages & Google Sites.';
+        if (discBtn) discBtn.classList.remove('hidden');
+      } else {
+        btn.className = 'flex items-center gap-1.5 text-xs bg-[#161618] hover:bg-[#1E1E22] px-3 py-1.5 rounded-lg border border-[#FF9D00]/40 text-[#FF9D00] font-semibold transition';
+        dot.className = 'w-2 h-2 rounded-full bg-[#FF9D00] animate-pulse';
+        txt.textContent = 'Local Mode — Connect Firebase';
+        if (title) title.textContent = 'Status: Local Browser Mode';
+        if (desc) desc.textContent = 'Paste your Firebase Web App config below to enable instant live syncing across your agency.';
+        if (discBtn) discBtn.classList.add('hidden');
+      }
+    }
+
+    function openFirebaseModal() {
+      const cfg = getEffectiveFirebaseConfig();
+      document.getElementById('firebaseConfigInput').value = cfg ? JSON.stringify(cfg, null, 2) : '';
+      updateFirebaseStatusUI(firebaseConnected, cfg ? cfg.projectId : '');
+      openModal('firebaseModal');
+    }
+
+    async function saveAndConnectFirebase() {
+      const raw = document.getElementById('firebaseConfigInput').value;
+      try {
+        const parsed = parseFlexibleFirebaseConfig(raw);
+        if (!parsed || !parsed.apiKey || !parsed.projectId) {
+          showToast('Please include valid apiKey and projectId');
+          return;
+        }
+        localStorage.setItem(FB_CONFIG_STORAGE_KEY, JSON.stringify(parsed));
+        showToast('Connecting to Firebase Cloud...');
+        await initFirebaseSync();
+        closeModal('firebaseModal');
+      } catch (e) {
+        showToast('Invalid Firebase config format — check JSON syntax');
+      }
+    }
+
+    function disconnectFirebase() {
+      if (unsubscribeSnapshot) {
+        unsubscribeSnapshot();
+        unsubscribeSnapshot = null;
+      }
+      localStorage.removeItem(FB_CONFIG_STORAGE_KEY);
+      firebaseConnected = false;
+      firestoreDocRef = null;
+      updateFirebaseStatusUI(false);
+      showToast('Disconnected from Firebase (Local Mode active)');
+    }
+
+    function copyHardcodedConfigSnippet() {
+      const raw = document.getElementById('firebaseConfigInput').value.trim();
+      let snippet = '';
+      try {
+        const parsed = parseFlexibleFirebaseConfig(raw);
+        snippet = `const HARDCODED_FIREBASE_CONFIG = ${JSON.stringify(parsed, null, 2)};`;
+      } catch (e) {
+        snippet = `const HARDCODED_FIREBASE_CONFIG = ${raw || 'null'};`;
+      }
+      const temp = document.createElement('textarea');
+      temp.value = snippet;
+      document.body.appendChild(temp);
+      temp.select();
+      document.execCommand('copy');
+      document.body.removeChild(temp);
+      showToast('Copied snippet! Paste into HARDCODED_FIREBASE_CONFIG in index.html for GitHub Pages');
     }
 
     // =========================================================================
@@ -1042,11 +1621,27 @@
     // =========================================================================
     // 4. NAVIGATION & INITIALIZATION
     // =========================================================================
+    function rerenderCurrentTab() {
+      if (activeTab === 'overview') renderOverview();
+      if (activeTab === 'csm') {
+        populateCityDropdown();
+        renderCsmTable();
+      }
+      if (activeTab === 'designers') {
+        renderDesignerFilterPills();
+        populateProjectStateFilter();
+        renderProjectsGrid();
+      }
+      if (activeTab === 'archived') renderArchivedView();
+      if (activeTab === 'history') renderHistoryView();
+    }
+
     function switchTab(tabName) {
       activeTab = tabName;
-      ['overview', 'csm', 'designers', 'archived'].forEach(t => {
+      ['overview', 'csm', 'designers', 'archived', 'history'].forEach(t => {
         const view = document.getElementById(`view-${t}`);
         const btn = document.querySelector(`.nav-btn[data-tab="${t}"]`);
+        if (!view || !btn) return;
         if (t === tabName) {
           view.classList.remove('hidden');
           btn.classList.add('bg-[#FF9D00]', 'text-[#0D0D0D]', 'shadow-md');
@@ -1058,19 +1653,7 @@
         }
       });
 
-      if (tabName === 'overview') renderOverview();
-      if (tabName === 'csm') {
-        populateCityDropdown();
-        renderCsmTable();
-      }
-      if (tabName === 'designers') {
-        renderDesignerFilterPills();
-        populateProjectStateFilter();
-        renderProjectsGrid();
-      }
-      if (tabName === 'archived') {
-        renderArchivedView();
-      }
+      rerenderCurrentTab();
     }
 
     function updateNavBadges() {
@@ -1078,6 +1661,8 @@
       document.getElementById('navProjectsCount').textContent = appState.projects.length;
       const totalArchived = appState.archivedLeads.length + appState.archivedProjects.length;
       document.getElementById('navArchiveCount').textContent = totalArchived;
+      const histBadge = document.getElementById('navHistoryCount');
+      if (histBadge) histBadge.textContent = (appState.historyLog || []).length;
     }
 
     function populateAllStateDropdowns() {
@@ -1098,6 +1683,7 @@
       const totalLeads = appState.leads.length;
       const closedWon = appState.leads.filter(l => l.status === 'Closed - Won').length;
       const activeProjects = appState.projects.length;
+      const onlyDesigners = appState.designers.filter(d => !d.memberType || d.memberType === 'designer');
 
       let totalTasks = 0;
       let doneTasks = 0;
@@ -1126,7 +1712,7 @@
         {
           label: 'Active Funnel Builds',
           value: activeProjects,
-          sub: `${appState.designers.length} Active Funnel Designers`,
+          sub: `${onlyDesigners.length} Active Funnel Designers`,
           accent: '#2A8BEA',
           icon: 'M13 2L3 14h9l-1 8 10-12h-9l1-8z'
         },
@@ -1152,8 +1738,8 @@
         </div>
       `).join('');
 
-      // Render Funnel Designer Performance Cards
-      document.getElementById('designerPerformanceGrid').innerHTML = appState.designers.map(d => {
+      // Render Funnel Designer Performance Cards (filtered to Funnel Designers)
+      document.getElementById('designerPerformanceGrid').innerHTML = onlyDesigners.map(d => {
         const dProjects = appState.projects.filter(p => p.designerId === d.id);
         let notStarted = 0, inProgress = 0, completed = 0;
         let dTotalTasks = 0, dDoneTasks = 0;
@@ -1423,6 +2009,14 @@
               </button>
             </td>
 
+            <!-- 10. Attribution Badge -->
+            <td class="py-2.5 px-3.5">
+              <div class="text-[11px] leading-tight">
+                <span class="font-bold text-zinc-200 block">${escapeHtml(lead.updatedBy || 'Team')}</span>
+                <span class="text-[10px] text-zinc-500">${escapeHtml(lead.updatedAt || 'Recorded')}</span>
+              </div>
+            </td>
+
             <!-- Actions: Archive & Delete -->
             <td class="py-2.5 px-3.5 text-right whitespace-nowrap">
               <div class="inline-flex items-center gap-1.5">
@@ -1442,131 +2036,168 @@
     function updateLeadField(id, field, value) {
       const lead = appState.leads.find(l => l.id === id);
       if (!lead) return;
-      lead[field] = value.trim();
-      saveState();
-      if (field === 'address') {
-        populateCityDropdown();
+      const trimmed = value.trim();
+      if (lead[field] === trimmed) return;
+
+      requireOperator((operator) => {
+        lead[field] = trimmed;
+        lead.updatedBy = operator.name;
+        lead.updatedAt = formatNowTimestamp();
+        recordAuditLog('LEAD', `Updated Lead ${field}`, lead.company, `Set ${field} to "${trimmed}"`);
+        saveState();
+        if (field === 'address') populateCityDropdown();
         renderCsmTable();
-      }
-      showToast('Lead updated & saved');
+        showToast(`Saved by ${operator.name}`);
+      });
     }
 
     function updateLeadStatus(id, newStatus) {
       const lead = appState.leads.find(l => l.id === id);
       if (!lead) return;
-      lead.status = newStatus;
-      saveState();
-      renderCsmTable();
-      showToast(`Status updated to "${newStatus}"`);
+
+      requireOperator((operator) => {
+        const oldStatus = lead.status;
+        lead.status = newStatus;
+        lead.updatedBy = operator.name;
+        lead.updatedAt = formatNowTimestamp();
+        recordAuditLog('LEAD', 'Changed Lead Status', lead.company, `${oldStatus} → ${newStatus}`);
+        saveState();
+        renderCsmTable();
+        showToast(`Status updated to "${newStatus}" by ${operator.name}`);
+      });
     }
 
     function addNewLeadRow() {
-      const newLead = {
-        id: 'lead-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
-        company: 'New Prospect Company',
-        rep: 'Contact Name',
-        position: 'Decision Maker',
-        email: 'name@company.com',
-        phone: '(555) 000-0000',
-        address: '100 Main St, Austin, TX',
-        website: 'https://company.com',
-        status: 'Under Campaign',
-        comments: []
-      };
-      appState.leads.unshift(newLead);
-      saveState();
-      populateCityDropdown();
-      renderCsmTable();
-      showToast('New editable lead row added at top');
+      requireOperator((operator) => {
+        const newLead = {
+          id: 'lead-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+          company: 'New Prospect Company',
+          rep: 'Contact Name',
+          position: 'Decision Maker',
+          email: 'name@company.com',
+          phone: '(555) 000-0000',
+          address: '100 Main St, Austin, TX',
+          website: 'https://company.com',
+          status: 'Under Campaign',
+          updatedBy: operator.name,
+          updatedAt: formatNowTimestamp(),
+          comments: []
+        };
+        appState.leads.unshift(newLead);
+        recordAuditLog('LEAD', 'Created New Lead Row', newLead.company, 'Added new prospect row to CSM Tracker');
+        saveState();
+        populateCityDropdown();
+        renderCsmTable();
+        showToast(`New row added by ${operator.name}`);
+      });
     }
 
     function addMultipleBlankRows(count) {
-      for (let i = 0; i < count; i++) {
-        appState.leads.unshift({
-          id: 'lead-' + Date.now() + '-' + i,
-          company: 'New Company ' + (i + 1),
-          rep: '',
-          position: '',
-          email: '',
-          phone: '',
-          address: 'City, TX',
-          website: '',
-          status: 'Under Campaign',
-          comments: []
-        });
-      }
-      saveState();
-      populateCityDropdown();
-      renderCsmTable();
-      closeModal('bulkAddModal');
-      showToast(`Added ${count} new rows`);
+      requireOperator((operator) => {
+        for (let i = 0; i < count; i++) {
+          appState.leads.unshift({
+            id: 'lead-' + Date.now() + '-' + i,
+            company: 'New Company ' + (i + 1),
+            rep: '',
+            position: '',
+            email: '',
+            phone: '',
+            address: 'City, TX',
+            website: '',
+            status: 'Under Campaign',
+            updatedBy: operator.name,
+            updatedAt: formatNowTimestamp(),
+            comments: []
+          });
+        }
+        recordAuditLog('LEAD', `Bulk Added ${count} Rows`, 'CSM Lead Tracker', `Inserted ${count} blank prospect rows`);
+        saveState();
+        populateCityDropdown();
+        renderCsmTable();
+        closeModal('bulkAddModal');
+        showToast(`Added ${count} rows (${operator.name})`);
+      });
     }
 
     function processBulkPaste() {
       const raw = document.getElementById('bulkPasteTextarea').value.trim();
       if (!raw) return;
-      const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
-      let imported = 0;
-      lines.forEach((line, idx) => {
-        const cols = line.split(',').map(c => c.trim());
-        appState.leads.unshift({
-          id: 'lead-' + Date.now() + '-' + idx,
-          company: cols[0] || 'Imported Lead',
-          rep: cols[1] || '',
-          position: cols[2] || '',
-          email: cols[3] || '',
-          phone: cols[4] || '',
-          address: cols[5] || '',
-          website: cols[6] || '',
-          status: 'Under Campaign',
-          comments: []
+      requireOperator((operator) => {
+        const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+        let imported = 0;
+        lines.forEach((line, idx) => {
+          const cols = line.split(',').map(c => c.trim());
+          appState.leads.unshift({
+            id: 'lead-' + Date.now() + '-' + idx,
+            company: cols[0] || 'Imported Lead',
+            rep: cols[1] || '',
+            position: cols[2] || '',
+            email: cols[3] || '',
+            phone: cols[4] || '',
+            address: cols[5] || '',
+            website: cols[6] || '',
+            status: 'Under Campaign',
+            updatedBy: operator.name,
+            updatedAt: formatNowTimestamp(),
+            comments: []
+          });
+          imported++;
         });
-        imported++;
+        document.getElementById('bulkPasteTextarea').value = '';
+        recordAuditLog('LEAD', `Imported ${imported} Leads`, 'CSM Lead Tracker', 'Bulk CSV paste import');
+        saveState();
+        populateCityDropdown();
+        renderCsmTable();
+        closeModal('bulkAddModal');
+        showToast(`Imported ${imported} lead rows (${operator.name})`);
       });
-      document.getElementById('bulkPasteTextarea').value = '';
-      saveState();
-      populateCityDropdown();
-      renderCsmTable();
-      closeModal('bulkAddModal');
-      showToast(`Imported ${imported} lead rows`);
     }
 
     function archiveLead(id) {
       const index = appState.leads.findIndex(l => l.id === id);
       if (index === -1) return;
-      const [lead] = appState.leads.splice(index, 1);
-      lead.archivedAt = new Date().toISOString().split('T')[0];
-      appState.archivedLeads.unshift(lead);
-      saveState();
-      populateCityDropdown();
-      renderCsmTable();
-      showToast(`Archived "${lead.company}"`);
+      requireOperator((operator) => {
+        const [lead] = appState.leads.splice(index, 1);
+        lead.archivedAt = new Date().toISOString().split('T')[0];
+        lead.archivedBy = operator.name;
+        appState.archivedLeads.unshift(lead);
+        recordAuditLog('ARCHIVE', 'Archived CSM Lead', lead.company, `Moved to Archive Vault by ${operator.name}`);
+        saveState();
+        populateCityDropdown();
+        renderCsmTable();
+        showToast(`Archived "${lead.company}" (${operator.name})`);
+      });
     }
 
     function confirmDeleteLead(id) {
       const lead = appState.leads.find(l => l.id === id);
       if (!lead) return;
-      openConfirmDialog(
-        'Delete Lead Permanently?',
-        `Remove "${lead.company}" from the CSM Lead Tracker? Tip: Use Archive if you want to keep a record.`,
-        () => {
-          appState.leads = appState.leads.filter(l => l.id !== id);
-          saveState();
-          populateCityDropdown();
-          renderCsmTable();
-          showToast('Lead deleted');
-        }
-      );
+      requireOperator((operator) => {
+        openConfirmDialog(
+          'Delete Lead Permanently?',
+          `Remove "${lead.company}" from the CSM Lead Tracker? This deletion will be logged under ${operator.name}.`,
+          () => {
+            appState.leads = appState.leads.filter(l => l.id !== id);
+            recordAuditLog('ARCHIVE', 'Deleted CSM Lead', lead.company, `Permanently removed from CSM Tracker`);
+            saveState();
+            populateCityDropdown();
+            renderCsmTable();
+            showToast(`Lead deleted (${operator.name})`);
+          }
+        );
+      });
     }
 
     function handoffLeadToDesigner(id) {
       const lead = appState.leads.find(l => l.id === id);
       if (!lead) return;
-      const { stateCode } = extractStateAndCity(lead.address);
-      const latestNote = (lead.comments && lead.comments.length > 0)
-        ? `CSM Note: ${lead.comments[lead.comments.length - 1].text}`
-        : '';
-      openAssignModal('tier2', lead.company, stateCode || 'TX', latestNote);
+      requireOperator(() => {
+        const { stateCode } = extractStateAndCity(lead.address);
+        const latestNote = (lead.comments && lead.comments.length > 0)
+          ? `CSM Note: ${lead.comments[lead.comments.length - 1].text}`
+          : '';
+        openAssignModal('tier2', lead.company, stateCode || 'TX', latestNote);
+      });
     }
 
     // =========================================================================
@@ -1583,6 +2214,7 @@
     function renderDesignerFilterPills() {
       const container = document.getElementById('designerFilterPills');
       const allBtnActive = selectedDesignerFilter === 'ALL';
+      const onlyDesigners = appState.designers.filter(d => !d.memberType || d.memberType === 'designer');
 
       let html = `
         <button onclick="setDesignerFilter('ALL')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${allBtnActive ? 'bg-[#FF9D00] text-[#0D0D0D]' : 'bg-[#0D0D0D] text-zinc-300 border border-[#262629] hover:border-zinc-600'}">
@@ -1590,7 +2222,7 @@
         </button>
       `;
 
-      html += appState.designers.map(d => {
+      html += onlyDesigners.map(d => {
         const count = appState.projects.filter(p => p.designerId === d.id).length;
         const isActive = selectedDesignerFilter === d.id;
         return `
@@ -1625,6 +2257,7 @@
     function renderProjectsGrid() {
       const statusFilter = document.getElementById('projectStatusFilter').value;
       const stateFilter = document.getElementById('projectStateFilter').value;
+      const onlyDesigners = appState.designers.filter(d => !d.memberType || d.memberType === 'designer');
 
       const filtered = appState.projects.filter(p => {
         if (selectedDesignerFilter !== 'ALL' && p.designerId !== selectedDesignerFilter) return false;
@@ -1647,7 +2280,6 @@
 
       grid.innerHTML = filtered.map(proj => {
         const pkg = PACKAGES[proj.tierId] || PACKAGES.tier1;
-        const designer = appState.designers.find(d => d.id === proj.designerId) || { name: 'Unassigned' };
         const status = getProjectStatus(proj);
         const total = proj.checklist.length;
         const done = proj.checklist.filter(t => t.done).length;
@@ -1684,7 +2316,7 @@
               <div class="flex items-center justify-between bg-[#0D0D0D] border border-[#262629] rounded-xl px-3 py-2 mb-4">
                 <span class="text-xs text-zinc-400">Assigned Designer:</span>
                 <select onchange="reassignProjectDesigner('${proj.id}', this.value)" class="bg-transparent text-xs font-bold text-[#FF9D00] outline-none cursor-pointer">
-                  ${appState.designers.map(d => `<option value="${d.id}" class="bg-[#161618] text-white" ${d.id === proj.designerId ? 'selected' : ''}>${escapeHtml(d.name)}</option>`).join('')}
+                  ${onlyDesigners.map(d => `<option value="${d.id}" class="bg-[#161618] text-white" ${d.id === proj.designerId ? 'selected' : ''}>${escapeHtml(d.name)}</option>`).join('')}
                 </select>
               </div>
 
@@ -1707,7 +2339,10 @@
                     <div class="flex items-start justify-between gap-2 p-2 rounded-xl bg-[#0D0D0D]/80 hover:bg-[#1E1E22] border border-[#262629]/70 transition">
                       <label class="flex items-start gap-2.5 cursor-pointer flex-1">
                         <input type="checkbox" ${task.done ? 'checked' : ''} onchange="toggleProjectTask('${proj.id}', '${task.id}')" class="mt-0.5 w-4 h-4 accent-[#FF9D00] rounded cursor-pointer shrink-0" />
-                        <span class="text-xs leading-relaxed ${task.done ? 'line-through text-zinc-500' : 'text-zinc-200'}">${escapeHtml(task.text)}</span>
+                        <span class="text-xs leading-relaxed ${task.done ? 'line-through text-zinc-500' : 'text-zinc-200'}">
+                          ${escapeHtml(task.text)}
+                          ${task.done && task.completedBy ? `<span class="block text-[10px] text-[#48CAED] no-underline mt-0.5">✓ Checked by ${escapeHtml(task.completedBy)}</span>` : ''}
+                        </span>
                       </label>
                       <button onclick="openTaskCommentModal('${proj.id}', '${task.id}')" title="Task Comments" class="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-bold border transition ${tComments.length > 0 ? 'bg-[#48CAED]/15 text-[#48CAED] border-[#48CAED]/40' : 'bg-[#161618] text-zinc-400 hover:text-white border-[#262629]'}">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
@@ -1719,18 +2354,24 @@
               </div>
             </div>
 
-            <!-- Card Footer Actions -->
-            <div class="pt-3 border-t border-[#262629] flex items-center justify-between gap-2">
-              <button onclick="addCustomChecklistItem('${proj.id}')" class="text-xs font-semibold text-[#2A8BEA] hover:underline">
-                + Add Task Item
-              </button>
-              <div class="flex items-center gap-1.5">
-                <button onclick="archiveProject('${proj.id}')" class="px-2.5 py-1 rounded-lg bg-[#1E1E22] hover:bg-[#48CAED]/20 text-zinc-300 hover:text-[#48CAED] border border-[#262629] text-xs font-semibold transition">
-                  Archive
+            <!-- Attribution Strip + Card Footer Actions -->
+            <div class="pt-3 border-t border-[#262629] space-y-2.5">
+              <div class="flex items-center justify-between text-[10px] text-zinc-500">
+                <span>Last update: <strong class="text-zinc-300">${escapeHtml(proj.updatedBy || 'Team')}</strong></span>
+                <span>${escapeHtml(proj.updatedAt || proj.createdAt || '')}</span>
+              </div>
+              <div class="flex items-center justify-between gap-2">
+                <button onclick="addCustomChecklistItem('${proj.id}')" class="text-xs font-semibold text-[#2A8BEA] hover:underline">
+                  + Add Task Item
                 </button>
-                <button onclick="confirmDeleteProject('${proj.id}')" class="px-2.5 py-1 rounded-lg bg-[#1E1E22] hover:bg-[#F73C5C]/20 text-zinc-400 hover:text-[#F73C5C] border border-[#262629] text-xs font-semibold transition">
-                  Delete
-                </button>
+                <div class="flex items-center gap-1.5">
+                  <button onclick="archiveProject('${proj.id}')" class="px-2.5 py-1 rounded-lg bg-[#1E1E22] hover:bg-[#48CAED]/20 text-zinc-300 hover:text-[#48CAED] border border-[#262629] text-xs font-semibold transition">
+                    Archive
+                  </button>
+                  <button onclick="confirmDeleteProject('${proj.id}')" class="px-2.5 py-1 rounded-lg bg-[#1E1E22] hover:bg-[#F73C5C]/20 text-zinc-400 hover:text-[#F73C5C] border border-[#262629] text-xs font-semibold transition">
+                    Delete
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -1743,84 +2384,118 @@
       if (!proj) return;
       const task = proj.checklist.find(t => t.id === taskId);
       if (!task) return;
-      task.done = !task.done;
-      saveState();
-      renderProjectsGrid();
-      if (getProjectStatus(proj) === 'Completed') {
-        showToast(`🎉 "${proj.clientName}" funnel build 100% completed!`);
-      }
+
+      requireOperator((operator) => {
+        task.done = !task.done;
+        task.completedBy = task.done ? operator.name : null;
+        proj.updatedBy = operator.name;
+        proj.updatedAt = formatNowTimestamp();
+        recordAuditLog(
+          'FUNNEL',
+          task.done ? 'Completed Deliverable Task' : 'Reopened Deliverable Task',
+          proj.clientName,
+          task.text
+        );
+        saveState();
+        renderProjectsGrid();
+        if (getProjectStatus(proj) === 'Completed') {
+          showToast(`🎉 "${proj.clientName}" funnel build 100% completed by ${operator.name}!`);
+        } else {
+          showToast(`${task.done ? 'Checked' : 'Unchecked'} by ${operator.name}`);
+        }
+      });
     }
 
     function reassignProjectDesigner(projectId, newDesignerId) {
       const proj = appState.projects.find(p => p.id === projectId);
       if (!proj) return;
-      proj.designerId = newDesignerId;
-      saveState();
-      renderDesignerFilterPills();
-      renderProjectsGrid();
-      const d = appState.designers.find(x => x.id === newDesignerId);
-      showToast(`Reassigned to ${d ? d.name : 'Designer'}`);
+      requireOperator((operator) => {
+        proj.designerId = newDesignerId;
+        proj.updatedBy = operator.name;
+        proj.updatedAt = formatNowTimestamp();
+        const d = appState.designers.find(x => x.id === newDesignerId);
+        recordAuditLog('FUNNEL', 'Reassigned Funnel Build', proj.clientName, `Assigned to ${d ? d.name : 'Designer'}`);
+        saveState();
+        renderDesignerFilterPills();
+        renderProjectsGrid();
+        showToast(`Reassigned to ${d ? d.name : 'Designer'} (${operator.name})`);
+      });
     }
 
     function addCustomChecklistItem(projectId) {
       const proj = appState.projects.find(p => p.id === projectId);
       if (!proj) return;
-      proj.checklist.push({
-        id: 't-' + Date.now(),
-        text: 'Custom Revision / QA Deliverable',
-        done: false,
-        comments: []
+      requireOperator((operator) => {
+        proj.checklist.push({
+          id: 't-' + Date.now(),
+          text: 'Custom Revision / QA Deliverable',
+          done: false,
+          comments: []
+        });
+        proj.updatedBy = operator.name;
+        proj.updatedAt = formatNowTimestamp();
+        recordAuditLog('FUNNEL', 'Added Custom Task Item', proj.clientName, 'Custom Revision / QA Deliverable');
+        saveState();
+        renderProjectsGrid();
+        showToast(`Added checklist item (${operator.name})`);
       });
-      saveState();
-      renderProjectsGrid();
-      showToast('Added extra checklist item');
     }
 
     function archiveProject(projectId) {
       const idx = appState.projects.findIndex(p => p.id === projectId);
       if (idx === -1) return;
-      const [proj] = appState.projects.splice(idx, 1);
-      proj.archivedAt = new Date().toISOString().split('T')[0];
-      appState.archivedProjects.unshift(proj);
-      saveState();
-      renderDesignerFilterPills();
-      populateProjectStateFilter();
-      renderProjectsGrid();
-      showToast(`Archived "${proj.clientName}" build`);
+      requireOperator((operator) => {
+        const [proj] = appState.projects.splice(idx, 1);
+        proj.archivedAt = new Date().toISOString().split('T')[0];
+        proj.archivedBy = operator.name;
+        appState.archivedProjects.unshift(proj);
+        recordAuditLog('ARCHIVE', 'Archived Funnel Build', proj.clientName, `Moved to Archive Vault by ${operator.name}`);
+        saveState();
+        renderDesignerFilterPills();
+        populateProjectStateFilter();
+        renderProjectsGrid();
+        showToast(`Archived "${proj.clientName}" (${operator.name})`);
+      });
     }
 
     function confirmDeleteProject(projectId) {
       const proj = appState.projects.find(p => p.id === projectId);
       if (!proj) return;
-      openConfirmDialog(
-        'Delete Funnel Project?',
-        `Are you sure you want to delete "${proj.clientName}"? Use Archive if you wish to preserve this build record.`,
-        () => {
-          appState.projects = appState.projects.filter(p => p.id !== projectId);
-          saveState();
-          renderDesignerFilterPills();
-          populateProjectStateFilter();
-          renderProjectsGrid();
-          showToast('Funnel project deleted');
-        }
-      );
+      requireOperator((operator) => {
+        openConfirmDialog(
+          'Delete Funnel Project?',
+          `Are you sure you want to delete "${proj.clientName}"? This action will be recorded under ${operator.name}.`,
+          () => {
+            appState.projects = appState.projects.filter(p => p.id !== projectId);
+            recordAuditLog('ARCHIVE', 'Deleted Funnel Build', proj.clientName, 'Permanently deleted from Funnel Designers');
+            saveState();
+            renderDesignerFilterPills();
+            populateProjectStateFilter();
+            renderProjectsGrid();
+            showToast(`Funnel project deleted (${operator.name})`);
+          }
+        );
+      });
     }
 
     // Assign Modal Functions
     function openAssignModal(preselectTier = 'tier1', prefillClient = '', prefillState = 'TX', prefillCustomNote = '') {
-      const designerSelect = document.getElementById('assignDesignerId');
-      designerSelect.innerHTML = appState.designers.map(d =>
-        `<option value="${d.id}">${escapeHtml(d.name)} (${escapeHtml(d.role || 'Funnel Designer')})</option>`
-      ).join('');
+      requireOperator(() => {
+        const designerSelect = document.getElementById('assignDesignerId');
+        const onlyDesigners = appState.designers.filter(d => !d.memberType || d.memberType === 'designer');
+        designerSelect.innerHTML = onlyDesigners.map(d =>
+          `<option value="${d.id}">${escapeHtml(d.name)} (${escapeHtml(d.role || 'Funnel Designer')})</option>`
+        ).join('');
 
-      document.getElementById('assignClientName').value = prefillClient;
-      document.getElementById('assignClientState').value = prefillState || 'TX';
-      document.getElementById('assignPackageTier').value = preselectTier;
-      document.getElementById('assignIncludeAddon').checked = false;
-      document.getElementById('assignCustomTask').value = prefillCustomNote;
+        document.getElementById('assignClientName').value = prefillClient;
+        document.getElementById('assignClientState').value = prefillState || 'TX';
+        document.getElementById('assignPackageTier').value = preselectTier;
+        document.getElementById('assignIncludeAddon').checked = false;
+        document.getElementById('assignCustomTask').value = prefillCustomNote;
 
-      updateAssignChecklistPreview();
-      openModal('assignModal');
+        updateAssignChecklistPreview();
+        openModal('assignModal');
+      });
     }
 
     function updateAssignChecklistPreview() {
@@ -1849,42 +2524,53 @@
 
     function submitAssignProject(e) {
       e.preventDefault();
-      const clientName = document.getElementById('assignClientName').value.trim();
-      const state = document.getElementById('assignClientState').value;
-      const designerId = document.getElementById('assignDesignerId').value;
-      const tierId = document.getElementById('assignPackageTier').value;
-      const hasAddon = tierId !== 'addon' && document.getElementById('assignIncludeAddon').checked;
-      const customTask = document.getElementById('assignCustomTask').value.trim();
+      requireOperator((operator) => {
+        const clientName = document.getElementById('assignClientName').value.trim();
+        const state = document.getElementById('assignClientState').value;
+        const designerId = document.getElementById('assignDesignerId').value;
+        const tierId = document.getElementById('assignPackageTier').value;
+        const hasAddon = tierId !== 'addon' && document.getElementById('assignIncludeAddon').checked;
+        const customTask = document.getElementById('assignCustomTask').value.trim();
 
-      const pkg = PACKAGES[tierId];
-      let rawTasks = [...pkg.tasks];
-      if (hasAddon) rawTasks = rawTasks.concat(PACKAGES.addon.tasks);
-      if (customTask) rawTasks.push(customTask);
+        const pkg = PACKAGES[tierId];
+        const designerObj = appState.designers.find(d => d.id === designerId);
+        let rawTasks = [...pkg.tasks];
+        if (hasAddon) rawTasks = rawTasks.concat(PACKAGES.addon.tasks);
+        if (customTask) rawTasks.push(customTask);
 
-      const newProj = {
-        id: 'proj-' + Date.now(),
-        clientName,
-        state,
-        designerId,
-        tierId,
-        hasAddon,
-        createdAt: new Date().toISOString().split('T')[0],
-        checklist: rawTasks.map((text, idx) => ({
-          id: `task-${Date.now()}-${idx}`,
-          text,
-          done: false,
-          comments: []
-        }))
-      };
+        const newProj = {
+          id: 'proj-' + Date.now(),
+          clientName,
+          state,
+          designerId,
+          tierId,
+          hasAddon,
+          createdAt: new Date().toISOString().split('T')[0],
+          updatedBy: operator.name,
+          updatedAt: formatNowTimestamp(),
+          checklist: rawTasks.map((text, idx) => ({
+            id: `task-${Date.now()}-${idx}`,
+            text,
+            done: false,
+            comments: []
+          }))
+        };
 
-      appState.projects.unshift(newProj);
-      saveState();
-      closeModal('assignModal');
-      switchTab('designers');
-      showToast(`Assigned ${pkg.badge} (${clientName}) to Funnel Designer`);
+        appState.projects.unshift(newProj);
+        recordAuditLog(
+          'FUNNEL',
+          `Assigned ${pkg.badge}${hasAddon ? ' + Maintenance' : ''}`,
+          `${clientName} (${state})`,
+          `Assigned to ${designerObj ? designerObj.name : 'Designer'} (${rawTasks.length} checklist items)`
+        );
+        saveState();
+        closeModal('assignModal');
+        switchTab('designers');
+        showToast(`Assigned ${pkg.badge} (${clientName}) by ${operator.name}`);
+      });
     }
 
-    // Roster Management (Add / Rename / Remove Designers)
+    // Roster Management (Add / Rename / Remove Team Members)
     function openRosterModal() {
       renderRosterList();
       openModal('rosterModal');
@@ -1896,8 +2582,13 @@
         <div class="flex items-center gap-2 bg-[#0D0D0D] border border-[#262629] rounded-xl p-2.5">
           <input type="text" value="${escapeHtml(d.name)}" onchange="renameDesigner('${d.id}', 'name', this.value)" class="w-1/3 bg-[#161618] border border-[#262629] focus:border-[#FF9D00] rounded-lg px-2.5 py-1.5 text-xs font-bold text-white outline-none" />
           <input type="text" value="${escapeHtml(d.role || '')}" placeholder="Role / Title" onchange="renameDesigner('${d.id}', 'role', this.value)" class="flex-1 bg-[#161618] border border-[#262629] focus:border-[#48CAED] rounded-lg px-2.5 py-1.5 text-xs text-zinc-300 outline-none" />
+          <select onchange="renameDesigner('${d.id}', 'memberType', this.value)" class="bg-[#161618] border border-[#262629] rounded-lg px-2 py-1.5 text-[11px] text-zinc-300 outline-none">
+            <option value="designer" ${(!d.memberType || d.memberType === 'designer') ? 'selected' : ''}>Designer</option>
+            <option value="csm" ${d.memberType === 'csm' ? 'selected' : ''}>CSM</option>
+            <option value="admin" ${d.memberType === 'admin' ? 'selected' : ''}>Admin</option>
+          </select>
           ${appState.designers.length > 1 ? `
-            <button onclick="removeDesigner('${d.id}')" title="Remove Designer" class="px-2 py-1.5 rounded-lg text-xs text-zinc-500 hover:text-[#F73C5C] hover:bg-[#F73C5C]/15 transition">
+            <button onclick="removeDesigner('${d.id}')" title="Remove Member" class="px-2 py-1.5 rounded-lg text-xs text-zinc-500 hover:text-[#F73C5C] hover:bg-[#F73C5C]/15 transition">
               ✕
             </button>
           ` : ''}
@@ -1909,50 +2600,51 @@
       const d = appState.designers.find(x => x.id === id);
       if (!d || !value.trim()) return;
       d[field] = value.trim();
-      saveState();
-      if (activeTab === 'overview') renderOverview();
-      if (activeTab === 'designers') {
-        renderDesignerFilterPills();
-        renderProjectsGrid();
+      if (activeOperator && activeOperator.id === id) {
+        saveSessionOperator({ id: d.id, name: d.name, role: d.role || 'Team Member' });
       }
-      showToast('Designer profile updated');
+      saveState();
+      rerenderCurrentTab();
+      showToast('Team member profile updated');
     }
 
     function addNewDesigner(e) {
       e.preventDefault();
       const input = document.getElementById('newDesignerNameInput');
+      const typeSelect = document.getElementById('newMemberTypeSelect');
       const name = input.value.trim();
+      const memberType = typeSelect ? typeSelect.value : 'designer';
       if (!name) return;
 
+      let defaultRole = 'Funnel Designer';
+      if (memberType === 'csm') defaultRole = 'Client Success Manager';
+      if (memberType === 'admin') defaultRole = 'Operations Admin';
+
       appState.designers.push({
-        id: 'fd-' + Date.now(),
+        id: 'member-' + Date.now(),
         name,
-        role: 'Funnel Designer'
+        role: defaultRole,
+        memberType
       });
       input.value = '';
       saveState();
       renderRosterList();
-      if (activeTab === 'overview') renderOverview();
-      if (activeTab === 'designers') renderDesignerFilterPills();
-      showToast(`Added Funnel Designer "${name}"`);
+      rerenderCurrentTab();
+      showToast(`Added "${name}" to Team Roster`);
     }
 
     function removeDesigner(id) {
       if (appState.designers.length <= 1) return;
-      const fallbackId = appState.designers.find(d => d.id !== id).id;
+      const fallbackDesigner = appState.designers.find(d => d.id !== id && (!d.memberType || d.memberType === 'designer')) || appState.designers.find(d => d.id !== id);
       appState.projects.forEach(p => {
-        if (p.designerId === id) p.designerId = fallbackId;
+        if (p.designerId === id && fallbackDesigner) p.designerId = fallbackDesigner.id;
       });
       appState.designers = appState.designers.filter(d => d.id !== id);
       if (selectedDesignerFilter === id) selectedDesignerFilter = 'ALL';
       saveState();
       renderRosterList();
-      if (activeTab === 'overview') renderOverview();
-      if (activeTab === 'designers') {
-        renderDesignerFilterPills();
-        renderProjectsGrid();
-      }
-      showToast('Designer removed & projects reassigned');
+      rerenderCurrentTab();
+      showToast('Team member removed');
     }
 
     // =========================================================================
@@ -1964,8 +2656,10 @@
     }
 
     function renderArchivedView() {
-      document.getElementById('archLeadsCount').textContent = appState.archivedLeads.length;
-      document.getElementById('archProjectsCount').textContent = appState.archivedProjects.length;
+      const leadsCountEl = document.getElementById('archLeadsCount');
+      const projectsCountEl = document.getElementById('archProjectsCount');
+      if (leadsCountEl) leadsCountEl.textContent = appState.archivedLeads.length;
+      if (projectsCountEl) projectsCountEl.textContent = appState.archivedProjects.length;
 
       const btnLeads = document.getElementById('archSubTabLeads');
       const btnProjects = document.getElementById('archSubTabProjects');
@@ -1998,7 +2692,10 @@
               </td>
               <td class="py-3 px-4 text-xs text-zinc-300">${escapeHtml(l.address)}</td>
               <td class="py-3 px-4"><span class="px-2 py-0.5 rounded-md text-xs font-semibold border ${getStatusBadgeStyle(l.status)}">${escapeHtml(l.status)}</span></td>
-              <td class="py-3 px-4 text-xs text-zinc-400">${escapeHtml(l.archivedAt || '—')}</td>
+              <td class="py-3 px-4 text-xs text-zinc-400">
+                <div>${escapeHtml(l.archivedAt || '—')}</div>
+                ${l.archivedBy ? `<div class="text-[10px] text-[#48CAED]">By ${escapeHtml(l.archivedBy)}</div>` : ''}
+              </td>
               <td class="py-3 px-4 text-right whitespace-nowrap space-x-1.5">
                 <button onclick="restoreArchivedLead('${l.id}')" class="px-3 py-1.5 rounded-lg bg-[#48CAED]/15 hover:bg-[#48CAED]/25 text-[#48CAED] border border-[#48CAED]/35 text-xs font-bold">
                   Restore
@@ -2032,7 +2729,7 @@
                 </div>
                 <div>
                   <h3 class="font-display font-bold text-base text-white">${escapeHtml(p.clientName)} (${escapeHtml(p.state)})</h3>
-                  <p class="text-xs text-zinc-400">Designer: ${d ? escapeHtml(d.name) : 'Unassigned'}</p>
+                  <p class="text-xs text-zinc-400">Designer: ${d ? escapeHtml(d.name) : 'Unassigned'} ${p.archivedBy ? `• Archived by ${escapeHtml(p.archivedBy)}` : ''}</p>
                 </div>
                 <div class="flex items-center justify-end gap-2 pt-2 border-t border-[#262629]">
                   <button onclick="restoreArchivedProject('${p.id}')" class="px-3 py-1.5 rounded-lg bg-[#48CAED]/15 text-[#48CAED] border border-[#48CAED]/35 text-xs font-bold">Restore Build</button>
@@ -2048,59 +2745,69 @@
     function restoreArchivedLead(id) {
       const idx = appState.archivedLeads.findIndex(l => l.id === id);
       if (idx === -1) return;
-      const [lead] = appState.archivedLeads.splice(idx, 1);
-      delete lead.archivedAt;
-      appState.leads.unshift(lead);
-      saveState();
-      renderArchivedView();
-      showToast(`Restored "${lead.company}" to CSM Tracker`);
+      requireOperator((operator) => {
+        const [lead] = appState.archivedLeads.splice(idx, 1);
+        delete lead.archivedAt;
+        delete lead.archivedBy;
+        lead.updatedBy = operator.name;
+        lead.updatedAt = formatNowTimestamp();
+        appState.leads.unshift(lead);
+        recordAuditLog('ARCHIVE', 'Restored Archived Lead', lead.company, `Restored back to active CSM Tracker`);
+        saveState();
+        renderArchivedView();
+        showToast(`Restored "${lead.company}" (${operator.name})`);
+      });
     }
 
     function deleteArchivedLead(id) {
-      appState.archivedLeads = appState.archivedLeads.filter(l => l.id !== id);
-      saveState();
-      renderArchivedView();
-      showToast('Permanently deleted archived lead');
+      const target = appState.archivedLeads.find(l => l.id === id);
+      if (!target) return;
+      requireOperator((operator) => {
+        appState.archivedLeads = appState.archivedLeads.filter(l => l.id !== id);
+        recordAuditLog('ARCHIVE', 'Permanently Deleted Lead', target.company, 'Deleted forever from Archive Vault');
+        saveState();
+        renderArchivedView();
+        showToast(`Permanently deleted (${operator.name})`);
+      });
     }
 
     function restoreArchivedProject(id) {
       const idx = appState.archivedProjects.findIndex(p => p.id === id);
       if (idx === -1) return;
-      const [proj] = appState.archivedProjects.splice(idx, 1);
-      delete proj.archivedAt;
-      appState.projects.unshift(proj);
-      saveState();
-      renderArchivedView();
-      showToast(`Restored "${proj.clientName}" to Funnel Designers`);
+      requireOperator((operator) => {
+        const [proj] = appState.archivedProjects.splice(idx, 1);
+        delete proj.archivedAt;
+        delete proj.archivedBy;
+        proj.updatedBy = operator.name;
+        proj.updatedAt = formatNowTimestamp();
+        appState.projects.unshift(proj);
+        recordAuditLog('ARCHIVE', 'Restored Funnel Build', proj.clientName, 'Restored back to Funnel Designers workspace');
+        saveState();
+        renderArchivedView();
+        showToast(`Restored "${proj.clientName}" (${operator.name})`);
+      });
     }
 
     function deleteArchivedProject(id) {
-      appState.archivedProjects = appState.archivedProjects.filter(p => p.id !== id);
-      saveState();
-      renderArchivedView();
-      showToast('Permanently deleted archived build');
+      const target = appState.archivedProjects.find(p => p.id === id);
+      if (!target) return;
+      requireOperator((operator) => {
+        appState.archivedProjects = appState.archivedProjects.filter(p => p.id !== id);
+        recordAuditLog('ARCHIVE', 'Permanently Deleted Build', target.clientName, 'Deleted forever from Archive Vault');
+        saveState();
+        renderArchivedView();
+        showToast(`Permanently deleted (${operator.name})`);
+      });
     }
 
     // =========================================================================
-    // 8B. UNIVERSAL COMMENT AUTOMATION (CSM LEADS & DESIGNER TASK ITEMS)
+    // 8B. UNIVERSAL COMMENT AUTOMATION (AUTO-TAGGED WITH SELECTED OPERATOR)
     // =========================================================================
     function formatNowTimestamp() {
       const now = new Date();
       return now.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) +
         ' • ' +
         now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-    }
-
-    function populateCommentAuthorDropdown(defaultAuthor = 'CSM') {
-      const select = document.getElementById('commentAuthorSelect');
-      const options = [
-        { value: 'CSM', label: 'CSM (Client Success)' },
-        { value: 'Jowie Corrado', label: 'Jowie Corrado (Owner)' },
-        ...appState.designers.map(d => ({ value: d.name, label: `${d.name} (Designer)` }))
-      ];
-      select.innerHTML = options.map(o =>
-        `<option value="${escapeHtml(o.value)}" ${o.value === defaultAuthor ? 'selected' : ''}>${escapeHtml(o.label)}</option>`
-      ).join('');
     }
 
     function openLeadCommentModal(leadId) {
@@ -2114,7 +2821,7 @@
       document.getElementById('commentModalSubTag').textContent = `${lead.rep || 'No Rep'} • ${lead.status}`;
       document.getElementById('commentModalTitle').textContent = lead.company;
 
-      populateCommentAuthorDropdown('CSM');
+      updateOperatorHeaderUI();
       document.getElementById('commentTextInput').value = '';
       renderCommentThreadList();
       openModal('commentModal');
@@ -2127,7 +2834,6 @@
       if (!task) return;
       if (!Array.isArray(task.comments)) task.comments = [];
 
-      const designer = appState.designers.find(d => d.id === proj.designerId);
       activeCommentContext = { type: 'task', projectId, taskId };
 
       document.getElementById('commentModalBadge').textContent = 'Funnel Task Update';
@@ -2135,7 +2841,7 @@
       document.getElementById('commentModalSubTag').textContent = `${proj.clientName} (${proj.state})`;
       document.getElementById('commentModalTitle').textContent = task.text;
 
-      populateCommentAuthorDropdown(designer ? designer.name : 'FD1');
+      updateOperatorHeaderUI();
       document.getElementById('commentTextInput').value = '';
       renderCommentThreadList();
       openModal('commentModal');
@@ -2171,10 +2877,11 @@
       container.innerHTML = comments.map(c => `
         <div class="bg-[#0D0D0D] border border-[#262629] rounded-xl p-3 flex items-start justify-between gap-3">
           <div class="space-y-1">
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
               <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#1E1E22] text-[#FF9D00] border border-[#262629]">
                 ${escapeHtml(c.author || 'Team')}
               </span>
+              ${c.role ? `<span class="text-[10px] text-[#48CAED] font-medium">${escapeHtml(c.role)}</span>` : ''}
               <span class="text-[11px] text-zinc-500">${escapeHtml(c.timestamp || '')}</span>
             </div>
             <p class="text-xs sm:text-sm text-zinc-200 leading-relaxed">${escapeHtml(c.text)}</p>
@@ -2190,45 +2897,135 @@
     function submitComment(e) {
       e.preventDefault();
       if (!activeCommentContext) return;
-      const author = document.getElementById('commentAuthorSelect').value;
       const input = document.getElementById('commentTextInput');
       const text = input.value.trim();
       if (!text) return;
 
-      const comments = getActiveCommentsArray();
-      comments.push({
-        id: 'cmt-' + Date.now(),
-        author,
-        text,
-        timestamp: formatNowTimestamp()
+      requireOperator((operator) => {
+        const comments = getActiveCommentsArray();
+        comments.push({
+          id: 'cmt-' + Date.now(),
+          author: operator.name,
+          role: operator.role,
+          text,
+          timestamp: formatNowTimestamp()
+        });
+
+        if (activeCommentContext.type === 'lead') {
+          const lead = appState.leads.find(l => l.id === activeCommentContext.leadId);
+          if (lead) {
+            lead.updatedBy = operator.name;
+            lead.updatedAt = formatNowTimestamp();
+            recordAuditLog('COMMENT', 'Posted CSM Lead Note', lead.company, text);
+          }
+        } else if (activeCommentContext.type === 'task') {
+          const proj = appState.projects.find(p => p.id === activeCommentContext.projectId);
+          if (proj) {
+            proj.updatedBy = operator.name;
+            proj.updatedAt = formatNowTimestamp();
+            recordAuditLog('COMMENT', 'Posted Funnel Task Note', proj.clientName, text);
+          }
+        }
+
+        input.value = '';
+        saveState();
+        renderCommentThreadList();
+
+        if (activeCommentContext.type === 'lead') renderCsmTable();
+        if (activeCommentContext.type === 'task') renderProjectsGrid();
+        showToast(`Note posted by ${operator.name}`);
       });
-
-      input.value = '';
-      saveState();
-      renderCommentThreadList();
-
-      if (activeCommentContext.type === 'lead') renderCsmTable();
-      if (activeCommentContext.type === 'task') renderProjectsGrid();
-      showToast('Comment posted');
     }
 
     function deleteComment(commentId) {
       if (!activeCommentContext) return;
-      if (activeCommentContext.type === 'lead') {
-        const lead = appState.leads.find(l => l.id === activeCommentContext.leadId);
-        if (lead) lead.comments = lead.comments.filter(c => c.id !== commentId);
-        saveState();
-        renderCommentThreadList();
-        renderCsmTable();
-      } else if (activeCommentContext.type === 'task') {
-        const proj = appState.projects.find(p => p.id === activeCommentContext.projectId);
-        const task = proj ? proj.checklist.find(t => t.id === activeCommentContext.taskId) : null;
-        if (task) task.comments = task.comments.filter(c => c.id !== commentId);
-        saveState();
-        renderCommentThreadList();
-        renderProjectsGrid();
+      requireOperator((operator) => {
+        if (activeCommentContext.type === 'lead') {
+          const lead = appState.leads.find(l => l.id === activeCommentContext.leadId);
+          if (lead) {
+            lead.comments = lead.comments.filter(c => c.id !== commentId);
+            recordAuditLog('COMMENT', 'Deleted CSM Lead Note', lead.company, `Removed comment by ${operator.name}`);
+          }
+          saveState();
+          renderCommentThreadList();
+          renderCsmTable();
+        } else if (activeCommentContext.type === 'task') {
+          const proj = appState.projects.find(p => p.id === activeCommentContext.projectId);
+          const task = proj ? proj.checklist.find(t => t.id === activeCommentContext.taskId) : null;
+          if (task) {
+            task.comments = task.comments.filter(c => c.id !== commentId);
+            recordAuditLog('COMMENT', 'Deleted Funnel Task Note', proj.clientName, `Removed comment by ${operator.name}`);
+          }
+          saveState();
+          renderCommentThreadList();
+          renderProjectsGrid();
+        }
+        showToast(`Comment removed (${operator.name})`);
+      });
+    }
+
+    // =========================================================================
+    // 8C. LIVE AUDIT HISTORY VIEW RENDERING
+    // =========================================================================
+    function renderHistoryView() {
+      const actorSelect = document.getElementById('historyActorFilter');
+      const currentActor = actorSelect.value;
+      const actors = Array.from(new Set((appState.historyLog || []).map(h => h.actorName).filter(Boolean))).sort();
+      actorSelect.innerHTML = `<option value="ALL">All Team Members</option>` +
+        actors.map(a => `<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`).join('');
+      if (actors.includes(currentActor)) actorSelect.value = currentActor;
+
+      const selectedActor = actorSelect.value;
+      const selectedCat = document.getElementById('historyCategoryFilter').value;
+
+      const logs = (appState.historyLog || []).filter(item => {
+        if (selectedActor !== 'ALL' && item.actorName !== selectedActor) return false;
+        if (selectedCat !== 'ALL' && item.category !== selectedCat) return false;
+        return true;
+      });
+
+      const list = document.getElementById('historyFeedList');
+      const empty = document.getElementById('historyEmptyState');
+
+      if (logs.length === 0) {
+        list.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
       }
-      showToast('Comment removed');
+      empty.classList.add('hidden');
+
+      list.innerHTML = logs.map(item => {
+        let badgeColor = '#48CAED';
+        if (item.category === 'FUNNEL') badgeColor = '#FF9D00';
+        if (item.category === 'COMMENT') badgeColor = '#2A8BEA';
+        if (item.category === 'ARCHIVE') badgeColor = '#F73C5C';
+
+        return `
+          <div class="p-4 hover:bg-[#1B1B1F] transition flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-start gap-3">
+              <div class="w-9 h-9 rounded-xl bg-[#0D0D0D] border border-[#262629] flex items-center justify-center font-display font-extrabold text-xs shrink-0" style="color: ${badgeColor};">
+                ${escapeHtml((item.actorName || 'TM').slice(0, 3).toUpperCase())}
+              </div>
+              <div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="font-bold text-xs sm:text-sm text-white">${escapeHtml(item.actorName)}</span>
+                  <span class="text-[11px] text-zinc-400">(${escapeHtml(item.actorRole || 'Team Member')})</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider" style="background-color: ${badgeColor}18; color: ${badgeColor}; border: 1px solid ${badgeColor}40;">
+                    ${escapeHtml(item.action)}
+                  </span>
+                </div>
+                <p class="text-xs text-zinc-300 mt-1">
+                  <strong class="text-white">${escapeHtml(item.target)}</strong>
+                  ${item.details ? ` — <span class="text-zinc-400">${escapeHtml(item.details)}</span>` : ''}
+                </p>
+              </div>
+            </div>
+            <div class="text-[11px] text-zinc-500 font-mono shrink-0">
+              ${escapeHtml(item.timestamp)}
+            </div>
+          </div>
+        `;
+      }).join('');
     }
 
     // =========================================================================
@@ -2247,7 +3044,7 @@
     }
 
     function openBulkAddModal() {
-      openModal('bulkAddModal');
+      requireOperator(() => openModal('bulkAddModal'));
     }
 
     function openConfirmDialog(title, message, onConfirm) {
@@ -2262,16 +3059,19 @@
     }
 
     function openResetConfirm() {
-      openConfirmDialog(
-        'Reset Portal to Demo Data?',
-        'This will restore the default Amplified Media sample leads, FD1–FD6 roster, and sample funnel builds.',
-        () => {
-          appState = getDefaultState();
-          saveState();
-          switchTab(activeTab);
-          showToast('Demo data restored');
-        }
-      );
+      requireOperator((operator) => {
+        openConfirmDialog(
+          'Reset Portal to Demo Data?',
+          `This will restore the default Amplified Media sample leads, team roster, and sample funnel builds (logged under ${operator.name}).`,
+          () => {
+            appState = getDefaultState();
+            recordAuditLog('ARCHIVE', 'Reset Portal Demo Data', 'Entire Portal', `Reset triggered by ${operator.name}`);
+            saveState();
+            switchTab(activeTab);
+            showToast(`Demo data restored (${operator.name})`);
+          }
+        );
+      });
     }
 
     function showToast(message) {
@@ -2300,8 +3100,12 @@
     // Boot Application
     window.addEventListener('DOMContentLoaded', () => {
       populateAllStateDropdowns();
+      updateOperatorHeaderUI();
       updateNavBadges();
       switchTab('overview');
+      if (typeof window.initFirebaseSync === 'function') {
+        window.initFirebaseSync();
+      }
     });
   </script>
 </body>
