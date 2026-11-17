@@ -2006,10 +2006,10 @@
             <!-- Actions: Archive & Delete -->
             <td class="py-2.5 px-3.5 text-right whitespace-nowrap">
               <div class="inline-flex items-center gap-1.5">
-                <button onclick="archiveLead('${lead.id}')" title="Archive Lead" class="px-2.5 py-1.5 rounded-lg bg-[#1E1E22] hover:bg-[#48CAED]/20 text-zinc-300 hover:text-[#48CAED] border border-[#262629] text-xs font-semibold transition">
+                <button type="button" onmousedown="event.preventDefault()" onclick="archiveLead('${lead.id}')" title="Archive Lead" class="px-2.5 py-1.5 rounded-lg bg-[#1E1E22] hover:bg-[#48CAED]/20 text-zinc-300 hover:text-[#48CAED] border border-[#262629] text-xs font-semibold transition">
                   Archive
                 </button>
-                <button onclick="confirmDeleteLead('${lead.id}')" title="Delete Lead" class="px-2.5 py-1.5 rounded-lg bg-[#1E1E22] hover:bg-[#F73C5C]/20 text-zinc-400 hover:text-[#F73C5C] border border-[#262629] text-xs font-semibold transition">
+                <button type="button" onmousedown="event.preventDefault()" onclick="confirmDeleteLead('${lead.id}')" title="Move Lead to Archived Vault" class="px-2.5 py-1.5 rounded-lg bg-[#1E1E22] hover:bg-[#F73C5C]/20 text-zinc-400 hover:text-[#F73C5C] border border-[#262629] text-xs font-semibold transition">
                   Delete
                 </button>
               </div>
@@ -2160,15 +2160,19 @@
       if (!lead) return;
       requireOperator((operator) => {
         openConfirmDialog(
-          'Delete Lead Permanently?',
-          `Remove "${lead.company}" from the CSM Lead Tracker? This deletion will be logged under ${operator.name}.`,
+          'Move Lead to Archived Vault?',
+          `Delete "${lead.company}" from the active CSM Lead Tracker? It will be moved to the Archived tab (logged under ${operator.name}) where it can be restored or permanently deleted.`,
           () => {
             appState.leads = appState.leads.filter(l => l.id !== id);
-            recordAuditLog('ARCHIVE', 'Deleted CSM Lead', lead.company, `Permanently removed from CSM Tracker`);
+            lead.archivedAt = formatNowTimestamp();
+            lead.archivedBy = operator.name;
+            lead.archiveReason = 'Deleted from CSM Lead Tracker';
+            appState.archivedLeads.unshift(lead);
+            recordAuditLog('ARCHIVE', 'Deleted CSM Lead (Moved to Archive)', lead.company, `Moved to Archived Vault by ${operator.name}`);
             saveState();
             populateCityDropdown();
             renderCsmTable();
-            showToast(`Lead deleted (${operator.name})`);
+            showToast(`"${lead.company}" moved to Archived (${operator.name})`);
           }
         );
       });
@@ -2199,6 +2203,7 @@
 
     function renderDesignerFilterPills() {
       const container = document.getElementById('designerFilterPills');
+      if (!container) return;
       const allBtnActive = selectedDesignerFilter === 'ALL';
       const onlyDesigners = appState.designers.filter(d => !d.memberType || d.memberType === 'designer');
 
@@ -2230,6 +2235,7 @@
 
     function populateProjectStateFilter() {
       const select = document.getElementById('projectStateFilter');
+      if (!select) return;
       const current = select.value;
       const statesInProjects = Array.from(new Set(appState.projects.map(p => p.state).filter(Boolean))).sort();
       select.innerHTML = `<option value="ALL">All Project States</option>` +
@@ -2241,8 +2247,10 @@
     }
 
     function renderProjectsGrid() {
-      const statusFilter = document.getElementById('projectStatusFilter').value;
-      const stateFilter = document.getElementById('projectStateFilter').value;
+      const statusEl = document.getElementById('projectStatusFilter');
+      const stateEl = document.getElementById('projectStateFilter');
+      const statusFilter = statusEl ? statusEl.value : 'ALL';
+      const stateFilter = stateEl ? stateEl.value : 'ALL';
       const onlyDesigners = appState.designers.filter(d => !d.memberType || d.memberType === 'designer');
 
       const filtered = appState.projects.filter(p => {
@@ -2255,6 +2263,7 @@
 
       const grid = document.getElementById('projectsGrid');
       const empty = document.getElementById('projectsEmptyState');
+      if (!grid || !empty) return;
 
       if (filtered.length === 0) {
         grid.innerHTML = '';
@@ -2278,7 +2287,6 @@
         return `
           <div class="bg-[#161618] border border-[#262629] rounded-2xl p-5 flex flex-col justify-between shadow-lg">
             <div>
-              <!-- Card Top Badges -->
               <div class="flex items-start justify-between gap-2 mb-3">
                 <div class="flex flex-wrap items-center gap-1.5">
                   <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold" style="background-color: ${pkg.accent}20; color: ${pkg.accent}; border: 1px solid ${pkg.accent}45;">
@@ -2294,11 +2302,9 @@
                 </span>
               </div>
 
-              <!-- Client Name & Package Title -->
               <h3 class="font-display text-lg font-extrabold text-white">${escapeHtml(proj.clientName)}</h3>
               <p class="text-xs text-zinc-400 mb-3">${pkg.name} (${pkg.timeline} • ${pkg.revisions})</p>
 
-              <!-- Assigned Designer Reassign Selector -->
               <div class="flex items-center justify-between bg-[#0D0D0D] border border-[#262629] rounded-xl px-3 py-2 mb-4">
                 <span class="text-xs text-zinc-400">Assigned Designer:</span>
                 <select onchange="reassignProjectDesigner('${proj.id}', this.value)" class="bg-transparent text-xs font-bold text-[#FF9D00] outline-none cursor-pointer">
@@ -2306,7 +2312,6 @@
                 </select>
               </div>
 
-              <!-- Completion Progress Bar -->
               <div class="mb-4">
                 <div class="flex items-center justify-between text-xs mb-1.5">
                   <span class="text-zinc-400 font-medium">Deliverable Checklist (${done}/${total})</span>
@@ -2317,7 +2322,6 @@
                 </div>
               </div>
 
-              <!-- Interactive Deliverable Tasks -->
               <div class="space-y-2 mb-4">
                 ${proj.checklist.map(task => {
                   const tComments = task.comments || [];
@@ -2340,7 +2344,6 @@
               </div>
             </div>
 
-            <!-- Attribution Strip + Card Footer Actions -->
             <div class="pt-3 border-t border-[#262629] space-y-2.5">
               <div class="flex items-center justify-between text-[10px] text-zinc-500">
                 <span>Last update: <strong class="text-zinc-300">${escapeHtml(proj.updatedBy || 'Team')}</strong></span>
@@ -2432,7 +2435,7 @@
       if (idx === -1) return;
       requireOperator((operator) => {
         const [proj] = appState.projects.splice(idx, 1);
-        proj.archivedAt = new Date().toISOString().split('T')[0];
+        proj.archivedAt = formatNowTimestamp();
         proj.archivedBy = operator.name;
         appState.archivedProjects.unshift(proj);
         recordAuditLog('ARCHIVE', 'Archived Funnel Build', proj.clientName, `Moved to Archive Vault by ${operator.name}`);
@@ -2449,16 +2452,207 @@
       if (!proj) return;
       requireOperator((operator) => {
         openConfirmDialog(
-          'Delete Funnel Project?',
-          `Are you sure you want to delete "${proj.clientName}"? This action will be recorded under ${operator.name}.`,
+          'Move Funnel Project to Archived Vault?',
+          `Delete "${proj.clientName}" from active Funnel Designers? It will be moved to the Archived tab (logged under ${operator.name}) where it can be restored or permanently deleted.`,
           () => {
             appState.projects = appState.projects.filter(p => p.id !== projectId);
-            recordAuditLog('ARCHIVE', 'Deleted Funnel Build', proj.clientName, 'Permanently deleted from Funnel Designers');
+            proj.archivedAt = formatNowTimestamp();
+            proj.archivedBy = operator.name;
+            proj.archiveReason = 'Deleted from Funnel Designers';
+            appState.archivedProjects.unshift(proj);
+            recordAuditLog('ARCHIVE', 'Deleted Funnel Build (Moved to Archive)', proj.clientName, `Moved to Archived Vault by ${operator.name}`);
             saveState();
             renderDesignerFilterPills();
             populateProjectStateFilter();
             renderProjectsGrid();
-            showToast(`Funnel project deleted (${operator.name})`);
+            showToast(`"${proj.clientName}" moved to Archived (${operator.name})`);
+          }
+        );
+      });
+    }
+
+    // =========================================================================
+    // 8. ARCHIVED ITEMS REPOSITORY (ALWAYS UPDATES BOTH SUB-TABS & COUNTS)
+    // =========================================================================
+    function switchArchiveSubTab(sub) {
+      activeArchiveSubTab = sub;
+      renderArchivedView();
+    }
+
+    function renderArchivedView() {
+      if (!Array.isArray(appState.archivedLeads)) appState.archivedLeads = [];
+      if (!Array.isArray(appState.archivedProjects)) appState.archivedProjects = [];
+
+      const leadsCountEl = document.getElementById('archLeadsCount');
+      const projectsCountEl = document.getElementById('archProjectsCount');
+      if (leadsCountEl) leadsCountEl.textContent = appState.archivedLeads.length;
+      if (projectsCountEl) projectsCountEl.textContent = appState.archivedProjects.length;
+
+      const btnLeads = document.getElementById('archSubTabLeads');
+      const btnProjects = document.getElementById('archSubTabProjects');
+      const panelLeads = document.getElementById('archivedLeadsPanel');
+      const panelProjects = document.getElementById('archivedProjectsPanel');
+      const emptyProjects = document.getElementById('archivedProjectsEmpty');
+      const tbody = document.getElementById('archivedLeadsBody');
+      const emptyLeads = document.getElementById('archivedLeadsEmpty');
+
+      if (!btnLeads || !btnProjects || !panelLeads || !panelProjects) return;
+
+      // Always populate Archived Leads table
+      if (appState.archivedLeads.length === 0) {
+        tbody.innerHTML = '';
+      } else {
+        tbody.innerHTML = appState.archivedLeads.map(l => `
+          <tr class="hover:bg-[#1B1B1F]">
+            <td class="py-3 px-4 font-bold text-white">${escapeHtml(l.company)}</td>
+            <td class="py-3 px-4 text-zinc-300">${escapeHtml(l.rep)} <span class="text-zinc-500 text-xs">(${escapeHtml(l.position)})</span></td>
+            <td class="py-3 px-4 text-xs text-zinc-300">
+              <div class="text-[#48CAED]">${escapeHtml(l.email)}</div>
+              <div>${escapeHtml(l.phone)}</div>
+            </td>
+            <td class="py-3 px-4 text-xs text-zinc-300">${escapeHtml(l.address)}</td>
+            <td class="py-3 px-4"><span class="px-2 py-0.5 rounded-md text-xs font-semibold border ${getStatusBadgeStyle(l.status)}">${escapeHtml(l.status)}</span></td>
+            <td class="py-3 px-4 text-xs text-zinc-400">
+              <div>${escapeHtml(l.archivedAt || '—')}</div>
+              ${l.archivedBy ? `<div class="text-[10px] text-[#48CAED]">By ${escapeHtml(l.archivedBy)}</div>` : ''}
+              ${l.archiveReason ? `<div class="text-[10px] text-[#F73C5C]">${escapeHtml(l.archiveReason)}</div>` : ''}
+            </td>
+            <td class="py-3 px-4 text-right whitespace-nowrap space-x-1.5">
+              <button type="button" onclick="restoreArchivedLead('${l.id}')" class="px-3 py-1.5 rounded-lg bg-[#48CAED]/15 hover:bg-[#48CAED]/25 text-[#48CAED] border border-[#48CAED]/35 text-xs font-bold">
+                Restore
+              </button>
+              <button type="button" onclick="deleteArchivedLead('${l.id}')" class="px-3 py-1.5 rounded-lg bg-[#F73C5C]/15 hover:bg-[#F73C5C]/25 text-[#F73C5C] border border-[#F73C5C]/35 text-xs font-bold">
+                Delete Forever
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      // Always populate Archived Funnel Builds grid
+      if (appState.archivedProjects.length === 0) {
+        panelProjects.innerHTML = '';
+      } else {
+        panelProjects.innerHTML = appState.archivedProjects.map(p => {
+          const pkg = PACKAGES[p.tierId] || PACKAGES.tier1;
+          const d = appState.designers.find(x => x.id === p.designerId);
+          return `
+            <div class="bg-[#161618] border border-[#262629] rounded-2xl p-5 space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#262629] text-zinc-300">${pkg.badge} • ${pkg.name}</span>
+                <span class="text-xs text-zinc-500">Archived ${escapeHtml(p.archivedAt || '')}</span>
+              </div>
+              <div>
+                <h3 class="font-display font-bold text-base text-white">${escapeHtml(p.clientName)} (${escapeHtml(p.state)})</h3>
+                <p class="text-xs text-zinc-400">Designer: ${d ? escapeHtml(d.name) : 'Unassigned'} ${p.archivedBy ? `• By ${escapeHtml(p.archivedBy)}` : ''}</p>
+                ${p.archiveReason ? `<p class="text-[11px] text-[#F73C5C] mt-0.5">${escapeHtml(p.archiveReason)}</p>` : ''}
+              </div>
+              <div class="flex items-center justify-end gap-2 pt-2 border-t border-[#262629]">
+                <button type="button" onclick="restoreArchivedProject('${p.id}')" class="px-3 py-1.5 rounded-lg bg-[#48CAED]/15 text-[#48CAED] border border-[#48CAED]/35 text-xs font-bold">Restore Build</button>
+                <button type="button" onclick="deleteArchivedProject('${p.id}')" class="px-3 py-1.5 rounded-lg bg-[#F73C5C]/15 text-[#F73C5C] border border-[#F73C5C]/35 text-xs font-bold">Delete Forever</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Toggle visible sub-panel cleanly
+      if (activeArchiveSubTab === 'leads') {
+        btnLeads.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[#FF9D00] text-[#0D0D0D]';
+        btnProjects.className = 'px-3.5 py-1.5 rounded-lg text-xs font-semibold text-zinc-400 hover:text-white';
+        panelProjects.classList.add('hidden');
+        emptyProjects.classList.add('hidden');
+
+        if (appState.archivedLeads.length === 0) {
+          panelLeads.classList.add('hidden');
+          emptyLeads.classList.remove('hidden');
+        } else {
+          panelLeads.classList.remove('hidden');
+          emptyLeads.classList.add('hidden');
+        }
+      } else {
+        btnProjects.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[#FF9D00] text-[#0D0D0D]';
+        btnLeads.className = 'px-3.5 py-1.5 rounded-lg text-xs font-semibold text-zinc-400 hover:text-white';
+        panelLeads.classList.add('hidden');
+        emptyLeads.classList.add('hidden');
+
+        if (appState.archivedProjects.length === 0) {
+          panelProjects.classList.add('hidden');
+          emptyProjects.classList.remove('hidden');
+        } else {
+          panelProjects.classList.remove('hidden');
+          emptyProjects.classList.add('hidden');
+        }
+      }
+    }
+
+    function restoreArchivedLead(id) {
+      const idx = appState.archivedLeads.findIndex(l => l.id === id);
+      if (idx === -1) return;
+      requireOperator((operator) => {
+        const [lead] = appState.archivedLeads.splice(idx, 1);
+        delete lead.archivedAt;
+        delete lead.archivedBy;
+        delete lead.archiveReason;
+        lead.updatedBy = operator.name;
+        lead.updatedAt = formatNowTimestamp();
+        appState.leads.unshift(lead);
+        recordAuditLog('ARCHIVE', 'Restored Archived Lead', lead.company, `Restored back to active CSM Tracker`);
+        saveState();
+        renderArchivedView();
+        showToast(`Restored "${lead.company}" (${operator.name})`);
+      });
+    }
+
+    function deleteArchivedLead(id) {
+      const target = appState.archivedLeads.find(l => l.id === id);
+      if (!target) return;
+      requireOperator((operator) => {
+        openConfirmDialog(
+          'Permanently Delete Lead?',
+          `Remove "${target.company}" forever from the Archived Vault? This cannot be undone.`,
+          () => {
+            appState.archivedLeads = appState.archivedLeads.filter(l => l.id !== id);
+            recordAuditLog('ARCHIVE', 'Permanently Deleted Lead', target.company, 'Deleted forever from Archive Vault');
+            saveState();
+            renderArchivedView();
+            showToast(`Permanently deleted "${target.company}" (${operator.name})`);
+          }
+        );
+      });
+    }
+
+    function restoreArchivedProject(id) {
+      const idx = appState.archivedProjects.findIndex(p => p.id === id);
+      if (idx === -1) return;
+      requireOperator((operator) => {
+        const [proj] = appState.archivedProjects.splice(idx, 1);
+        delete proj.archivedAt;
+        delete proj.archivedBy;
+        delete proj.archiveReason;
+        proj.updatedBy = operator.name;
+        proj.updatedAt = formatNowTimestamp();
+        appState.projects.unshift(proj);
+        recordAuditLog('ARCHIVE', 'Restored Funnel Build', proj.clientName, 'Restored back to Funnel Designers workspace');
+        saveState();
+        renderArchivedView();
+        showToast(`Restored "${proj.clientName}" (${operator.name})`);
+      });
+    }
+
+    function deleteArchivedProject(id) {
+      const target = appState.archivedProjects.find(p => p.id === id);
+      if (!target) return;
+      requireOperator((operator) => {
+        openConfirmDialog(
+          'Permanently Delete Funnel Build?',
+          `Remove "${target.clientName}" forever from the Archived Vault? This cannot be undone.`,
+          () => {
+            appState.archivedProjects = appState.archivedProjects.filter(p => p.id !== id);
+            recordAuditLog('ARCHIVE', 'Permanently Deleted Build', target.clientName, 'Deleted forever from Archive Vault');
+            saveState();
+            renderArchivedView();
+            showToast(`Permanently deleted "${target.clientName}" (${operator.name})`);
           }
         );
       });
@@ -2631,159 +2825,6 @@
       renderRosterList();
       rerenderCurrentTab();
       showToast('Team member removed');
-    }
-
-    // =========================================================================
-    // 8. ARCHIVED ITEMS REPOSITORY
-    // =========================================================================
-    function switchArchiveSubTab(sub) {
-      activeArchiveSubTab = sub;
-      renderArchivedView();
-    }
-
-    function renderArchivedView() {
-      const leadsCountEl = document.getElementById('archLeadsCount');
-      const projectsCountEl = document.getElementById('archProjectsCount');
-      if (leadsCountEl) leadsCountEl.textContent = appState.archivedLeads.length;
-      if (projectsCountEl) projectsCountEl.textContent = appState.archivedProjects.length;
-
-      const btnLeads = document.getElementById('archSubTabLeads');
-      const btnProjects = document.getElementById('archSubTabProjects');
-      const panelLeads = document.getElementById('archivedLeadsPanel');
-      const panelProjects = document.getElementById('archivedProjectsPanel');
-      const emptyProjects = document.getElementById('archivedProjectsEmpty');
-
-      if (activeArchiveSubTab === 'leads') {
-        btnLeads.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[#FF9D00] text-[#0D0D0D]';
-        btnProjects.className = 'px-3.5 py-1.5 rounded-lg text-xs font-semibold text-zinc-400 hover:text-white';
-        panelLeads.classList.remove('hidden');
-        panelProjects.classList.add('hidden');
-        emptyProjects.classList.add('hidden');
-
-        const tbody = document.getElementById('archivedLeadsBody');
-        const emptyLeads = document.getElementById('archivedLeadsEmpty');
-
-        if (appState.archivedLeads.length === 0) {
-          tbody.innerHTML = '';
-          emptyLeads.classList.remove('hidden');
-        } else {
-          emptyLeads.classList.add('hidden');
-          tbody.innerHTML = appState.archivedLeads.map(l => `
-            <tr class="hover:bg-[#1B1B1F]">
-              <td class="py-3 px-4 font-bold text-white">${escapeHtml(l.company)}</td>
-              <td class="py-3 px-4 text-zinc-300">${escapeHtml(l.rep)} <span class="text-zinc-500 text-xs">(${escapeHtml(l.position)})</span></td>
-              <td class="py-3 px-4 text-xs text-zinc-300">
-                <div class="text-[#48CAED]">${escapeHtml(l.email)}</div>
-                <div>${escapeHtml(l.phone)}</div>
-              </td>
-              <td class="py-3 px-4 text-xs text-zinc-300">${escapeHtml(l.address)}</td>
-              <td class="py-3 px-4"><span class="px-2 py-0.5 rounded-md text-xs font-semibold border ${getStatusBadgeStyle(l.status)}">${escapeHtml(l.status)}</span></td>
-              <td class="py-3 px-4 text-xs text-zinc-400">
-                <div>${escapeHtml(l.archivedAt || '—')}</div>
-                ${l.archivedBy ? `<div class="text-[10px] text-[#48CAED]">By ${escapeHtml(l.archivedBy)}</div>` : ''}
-              </td>
-              <td class="py-3 px-4 text-right whitespace-nowrap space-x-1.5">
-                <button onclick="restoreArchivedLead('${l.id}')" class="px-3 py-1.5 rounded-lg bg-[#48CAED]/15 hover:bg-[#48CAED]/25 text-[#48CAED] border border-[#48CAED]/35 text-xs font-bold">
-                  Restore
-                </button>
-                <button onclick="deleteArchivedLead('${l.id}')" class="px-3 py-1.5 rounded-lg bg-[#F73C5C]/15 hover:bg-[#F73C5C]/25 text-[#F73C5C] border border-[#F73C5C]/35 text-xs font-bold">
-                  Delete Forever
-                </button>
-              </td>
-            </tr>
-          `).join('');
-        }
-      } else {
-        btnProjects.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[#FF9D00] text-[#0D0D0D]';
-        btnLeads.className = 'px-3.5 py-1.5 rounded-lg text-xs font-semibold text-zinc-400 hover:text-white';
-        panelLeads.classList.add('hidden');
-
-        if (appState.archivedProjects.length === 0) {
-          panelProjects.classList.add('hidden');
-          emptyProjects.classList.remove('hidden');
-        } else {
-          emptyProjects.classList.add('hidden');
-          panelProjects.classList.remove('hidden');
-          panelProjects.innerHTML = appState.archivedProjects.map(p => {
-            const pkg = PACKAGES[p.tierId] || PACKAGES.tier1;
-            const d = appState.designers.find(x => x.id === p.designerId);
-            return `
-              <div class="bg-[#161618] border border-[#262629] rounded-2xl p-5 space-y-3">
-                <div class="flex items-center justify-between">
-                  <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#262629] text-zinc-300">${pkg.badge} • ${pkg.name}</span>
-                  <span class="text-xs text-zinc-500">Archived ${escapeHtml(p.archivedAt || '')}</span>
-                </div>
-                <div>
-                  <h3 class="font-display font-bold text-base text-white">${escapeHtml(p.clientName)} (${escapeHtml(p.state)})</h3>
-                  <p class="text-xs text-zinc-400">Designer: ${d ? escapeHtml(d.name) : 'Unassigned'} ${p.archivedBy ? `• Archived by ${escapeHtml(p.archivedBy)}` : ''}</p>
-                </div>
-                <div class="flex items-center justify-end gap-2 pt-2 border-t border-[#262629]">
-                  <button onclick="restoreArchivedProject('${p.id}')" class="px-3 py-1.5 rounded-lg bg-[#48CAED]/15 text-[#48CAED] border border-[#48CAED]/35 text-xs font-bold">Restore Build</button>
-                  <button onclick="deleteArchivedProject('${p.id}')" class="px-3 py-1.5 rounded-lg bg-[#F73C5C]/15 text-[#F73C5C] border border-[#F73C5C]/35 text-xs font-bold">Delete</button>
-                </div>
-              </div>
-            `;
-          }).join('');
-        }
-      }
-    }
-
-    function restoreArchivedLead(id) {
-      const idx = appState.archivedLeads.findIndex(l => l.id === id);
-      if (idx === -1) return;
-      requireOperator((operator) => {
-        const [lead] = appState.archivedLeads.splice(idx, 1);
-        delete lead.archivedAt;
-        delete lead.archivedBy;
-        lead.updatedBy = operator.name;
-        lead.updatedAt = formatNowTimestamp();
-        appState.leads.unshift(lead);
-        recordAuditLog('ARCHIVE', 'Restored Archived Lead', lead.company, `Restored back to active CSM Tracker`);
-        saveState();
-        renderArchivedView();
-        showToast(`Restored "${lead.company}" (${operator.name})`);
-      });
-    }
-
-    function deleteArchivedLead(id) {
-      const target = appState.archivedLeads.find(l => l.id === id);
-      if (!target) return;
-      requireOperator((operator) => {
-        appState.archivedLeads = appState.archivedLeads.filter(l => l.id !== id);
-        recordAuditLog('ARCHIVE', 'Permanently Deleted Lead', target.company, 'Deleted forever from Archive Vault');
-        saveState();
-        renderArchivedView();
-        showToast(`Permanently deleted (${operator.name})`);
-      });
-    }
-
-    function restoreArchivedProject(id) {
-      const idx = appState.archivedProjects.findIndex(p => p.id === id);
-      if (idx === -1) return;
-      requireOperator((operator) => {
-        const [proj] = appState.archivedProjects.splice(idx, 1);
-        delete proj.archivedAt;
-        delete proj.archivedBy;
-        proj.updatedBy = operator.name;
-        proj.updatedAt = formatNowTimestamp();
-        appState.projects.unshift(proj);
-        recordAuditLog('ARCHIVE', 'Restored Funnel Build', proj.clientName, 'Restored back to Funnel Designers workspace');
-        saveState();
-        renderArchivedView();
-        showToast(`Restored "${proj.clientName}" (${operator.name})`);
-      });
-    }
-
-    function deleteArchivedProject(id) {
-      const target = appState.archivedProjects.find(p => p.id === id);
-      if (!target) return;
-      requireOperator((operator) => {
-        appState.archivedProjects = appState.archivedProjects.filter(p => p.id !== id);
-        recordAuditLog('ARCHIVE', 'Permanently Deleted Build', target.clientName, 'Deleted forever from Archive Vault');
-        saveState();
-        renderArchivedView();
-        showToast(`Permanently deleted (${operator.name})`);
-      });
     }
 
     // =========================================================================
