@@ -133,9 +133,9 @@
           </button>
 
           <!-- Firebase Live Cloud Sync Status Pill -->
-          <button onclick="openFirebaseModal()" id="firebaseStatusBtn" class="flex items-center gap-1.5 text-xs bg-[#161618] hover:bg-[#1E1E22] px-3 py-1.5 rounded-lg border border-[#FF9D00]/40 text-[#FF9D00] font-semibold transition">
-            <span id="firebaseStatusDot" class="w-2 h-2 rounded-full bg-[#FF9D00] animate-pulse"></span>
-            <span id="firebaseStatusText">Local Mode — Connect Firebase</span>
+          <button onclick="openFirebaseModal()" id="firebaseStatusBtn" class="flex items-center gap-1.5 text-xs bg-[#161618] hover:bg-[#1E1E22] px-3 py-1.5 rounded-lg border border-[#48CAED]/45 text-[#48CAED] font-semibold transition">
+            <span id="firebaseStatusDot" class="w-2 h-2 rounded-full bg-[#48CAED] animate-pulse"></span>
+            <span id="firebaseStatusText">Connecting Cloud Sync...</span>
           </button>
 
           <button onclick="openResetConfirm()" class="px-2.5 py-1.5 rounded-lg text-xs font-medium text-zinc-400 hover:text-white bg-[#161618] hover:bg-[#1E1E22] border border-[#262629] transition">
@@ -762,8 +762,8 @@
 
       <div id="firebaseConnectionBanner" class="p-3.5 rounded-xl bg-[#0D0D0D] border border-[#262629] flex items-center justify-between gap-3">
         <div class="text-xs">
-          <p class="font-bold text-white" id="fbModalStatusTitle">Status: Local Browser Mode</p>
-          <p class="text-zinc-400 mt-0.5" id="fbModalStatusDesc">Paste your Firebase Web App config below to enable instant live syncing across your agency.</p>
+          <p class="font-bold text-white" id="fbModalStatusTitle">Status: Connected Live to Firebase (amplified-media-hub)</p>
+          <p class="text-zinc-400 mt-0.5" id="fbModalStatusDesc">Your amplified-media-hub database config is built right into this file for instant multi-browser syncing.</p>
         </div>
         <button id="fbDisconnectBtn" onclick="disconnectFirebase()" class="hidden px-3 py-1.5 rounded-lg bg-[#F73C5C]/15 text-[#F73C5C] border border-[#F73C5C]/35 text-xs font-bold shrink-0">
           Disconnect
@@ -771,28 +771,21 @@
       </div>
 
       <div class="space-y-2">
-        <label class="block text-xs font-semibold text-zinc-200">Paste Firebase Config Object or JSON (from Firebase Console → Project Settings → Web App)</label>
-        <textarea id="firebaseConfigInput" rows="6" placeholder='{
-  "apiKey": "AIzaSy...",
-  "authDomain": "amplified-media-ops.firebaseapp.com",
-  "projectId": "amplified-media-ops",
-  "storageBucket": "amplified-media-ops.appspot.com",
-  "messagingSenderId": "1234567890",
-  "appId": "1:1234567890:web:abcdef123456"
-}' class="w-full font-mono bg-[#0D0D0D] border border-[#262629] focus:border-[#48CAED] rounded-xl p-3 text-xs text-[#48CAED] placeholder-zinc-600 outline-none"></textarea>
+        <label class="block text-xs font-semibold text-zinc-200">Firebase Web App Config (Connected to amplified-media-hub)</label>
+        <textarea id="firebaseConfigInput" rows="6" class="w-full font-mono bg-[#0D0D0D] border border-[#262629] focus:border-[#48CAED] rounded-xl p-3 text-xs text-[#48CAED] placeholder-zinc-600 outline-none"></textarea>
         <p class="text-[11px] text-zinc-400">
-          Tip: In Firebase Console, enable <strong class="text-zinc-200">Cloud Firestore</strong> (in test mode or authenticated rules) and <strong class="text-zinc-200">Anonymous Authentication</strong> (or open Firestore rules for <code class="text-[#FF9D00]">amplified_media_portal/live_state</code>).
+          Connected to <code class="text-[#FF9D00]">amplified-media-hub</code> Firestore (<code class="text-[#48CAED]">artifacts/amplified-media-ops/public/data/portal_state/master_board</code>).
         </p>
       </div>
 
       <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-[#262629]">
         <button type="button" onclick="copyHardcodedConfigSnippet()" class="px-3.5 py-2 rounded-xl bg-[#1E1E22] hover:bg-[#27272D] text-xs font-semibold text-[#48CAED] border border-[#48CAED]/35 transition">
-          Copy Hardcoded Snippet for GitHub Pages
+          Copy Hardcoded Snippet
         </button>
         <div class="flex items-center gap-2">
           <button type="button" onclick="closeModal('firebaseModal')" class="px-4 py-2 rounded-xl bg-[#1E1E22] text-zinc-300 text-xs font-semibold">Close</button>
           <button type="button" onclick="saveAndConnectFirebase()" class="px-5 py-2 rounded-xl bg-[#FF9D00] hover:bg-[#ffb033] text-[#0D0D0D] text-xs font-bold shadow-lg shadow-[#FF9D00]/20">
-            Save &amp; Connect Live Sync
+            Save &amp; Reconnect Live Sync
           </button>
         </div>
       </div>
@@ -827,10 +820,16 @@
 
   <script>
     // =========================================================================
-    // OPTIONAL: HARDCODE YOUR FIREBASE CONFIG HERE FOR GITHUB PAGES HOSTING
-    // Once pasted here and pushed to GitHub, every team member connects live!
+    // AMPLIFIED MEDIA LIVE CLOUD SYNC CONFIG (PRE-CONNECTED TO amplified-media-hub)
     // =========================================================================
-    const HARDCODED_FIREBASE_CONFIG = null;
+    const HARDCODED_FIREBASE_CONFIG = {
+      apiKey: "AIzaSyC9B6M_tMEaEYILzSQN0XNl7qa6WGwc05g",
+      authDomain: "amplified-media-hub.firebaseapp.com",
+      projectId: "amplified-media-hub",
+      storageBucket: "amplified-media-hub.firebasestorage.app",
+      messagingSenderId: "369737961821",
+      appId: "1:369737961821:web:b3f9d000cc1c0e0d9558b4"
+    };
 
     // =========================================================================
     // 1. CONSTANTS, ALL 50 US STATES & AMPLIFIED MEDIA PACKAGE DEFINITIONS
@@ -1284,7 +1283,6 @@
         target: target || 'Portal Item',
         details
       });
-      // Keep most recent 250 entries for fast syncing
       if (appState.historyLog.length > 250) {
         appState.historyLog = appState.historyLog.slice(0, 250);
       }
@@ -1408,7 +1406,6 @@
       try {
         return JSON.parse(trimmed);
       } catch (e) {
-        // Allow pasting JS object literal from Firebase Console (e.g. const firebaseConfig = { apiKey: "..." };)
         const start = trimmed.indexOf('{');
         const end = trimmed.lastIndexOf('}');
         if (start === -1 || end === -1) throw new Error('Invalid config object');
@@ -1440,24 +1437,21 @@
         }
 
         const fbApp = window.FirebaseSDK.initializeApp(cfg);
-        const auth = window.FirebaseSDK.getAuth(fbApp);
         const db = window.FirebaseSDK.getFirestore(fbApp);
 
-        // Attempt authentication gracefully; fall back cleanly if network/sandbox blocks Identity Toolkit
-        try {
-          if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-            await window.FirebaseSDK.signInWithCustomToken(auth, __initial_auth_token);
-          } else {
-            await window.FirebaseSDK.signInAnonymously(auth);
+        // Only sign in via Firebase Auth if running inside workspace; on GitHub Pages connect directly to Firestore test mode
+        const hasWorkspaceAuth = typeof __firebase_config !== 'undefined' && __firebase_config;
+        if (hasWorkspaceAuth) {
+          const auth = window.FirebaseSDK.getAuth(fbApp);
+          try {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+              await window.FirebaseSDK.signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+              await window.FirebaseSDK.signInAnonymously(auth);
+            }
+          } catch (authErr) {
+            console.warn('Workspace auth skipped:', authErr?.code || authErr);
           }
-        } catch (authErr) {
-          if (authErr && authErr.code === 'auth/network-request-failed') {
-            console.warn('Firebase Auth network unavailable in current environment; continuing in local-first mode.');
-            firebaseConnected = false;
-            updateFirebaseStatusUI(false);
-            return;
-          }
-          console.warn('Firebase Auth skipped:', authErr?.code || authErr);
         }
 
         const appNamespace = typeof __app_id !== 'undefined' ? __app_id : 'amplified-media-ops';
@@ -1574,7 +1568,7 @@
       temp.select();
       document.execCommand('copy');
       document.body.removeChild(temp);
-      showToast('Copied snippet! Paste into HARDCODED_FIREBASE_CONFIG in index.html for GitHub Pages');
+      showToast('Copied snippet!');
     }
 
     // =========================================================================
@@ -1584,7 +1578,6 @@
       if (!addressStr) return { stateCode: '', city: '' };
       const cleaned = addressStr.trim();
 
-      // Match 2-letter state code (e.g., ", TX" or " TX 78701" or ", Texas")
       let foundCode = '';
       const codeRegex = /(?:,|\s)\b([A-Za-z]{2})\b(?:\s+\d{5})?$/;
       const codeMatch = cleaned.match(codeRegex);
@@ -1601,11 +1594,9 @@
         if (byName) foundCode = byName.code;
       }
 
-      // Extract City (typically segment right before State)
       let city = '';
       const parts = cleaned.split(',').map(p => p.trim()).filter(Boolean);
       if (parts.length >= 2) {
-        // Check if last part is "State" or "State ZIP"
         const lastPart = parts[parts.length - 1];
         const maybeCode = lastPart.split(/\s+/)[0].toUpperCase();
         if (US_STATES.some(s => s.code === maybeCode || s.name.toLowerCase() === lastPart.toLowerCase())) {
@@ -1666,12 +1657,10 @@
     }
 
     function populateAllStateDropdowns() {
-      // CSM State Filter
       const csmSelect = document.getElementById('csmStateFilter');
       csmSelect.innerHTML = `<option value="ALL">All 50 US States</option>` +
         US_STATES.map(s => `<option value="${s.code}">${s.name} (${s.code})</option>`).join('');
 
-      // Assign Project Modal State Select
       const assignState = document.getElementById('assignClientState');
       assignState.innerHTML = US_STATES.map(s => `<option value="${s.code}">${s.name} (${s.code})</option>`).join('');
     }
@@ -1693,7 +1682,6 @@
       });
       const completionRate = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
 
-      // Render KPI Cards
       const kpis = [
         {
           label: 'Total Active CSM Leads',
@@ -1738,7 +1726,6 @@
         </div>
       `).join('');
 
-      // Render Funnel Designer Performance Cards (filtered to Funnel Designers)
       document.getElementById('designerPerformanceGrid').innerHTML = onlyDesigners.map(d => {
         const dProjects = appState.projects.filter(p => p.designerId === d.id);
         let notStarted = 0, inProgress = 0, completed = 0;
@@ -1792,7 +1779,6 @@
         `;
       }).join('');
 
-      // Render Amplified Media Packages Matrix
       document.getElementById('packagesMatrixGrid').innerHTML = Object.values(PACKAGES).map(pkg => `
         <div class="bg-[#161618] border border-[#262629] hover:border-[${pkg.accent}]/60 rounded-2xl p-5 flex flex-col justify-between transition">
           <div>
@@ -1888,7 +1874,7 @@
           return 'bg-[#2A8BEA]/20 text-[#2A8BEA] border-[#2A8BEA]/45';
         case 'Closed - Lost':
           return 'bg-[#F73C5C]/20 text-[#F73C5C] border-[#F73C5C]/45';
-        default: // Under Campaign
+        default:
           return 'bg-zinc-800 text-zinc-200 border-zinc-700';
       }
     }
@@ -2570,7 +2556,7 @@
       });
     }
 
-    // Roster Management (Add / Rename / Remove Team Members)
+    // Roster Management
     function openRosterModal() {
       renderRosterList();
       openModal('rosterModal');
